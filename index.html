@@ -18,6 +18,8 @@ Collaborators:
 <!-- Load style sheets -->
 <link rel="stylesheet" href=
   "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.css">
+<link rel="stylesheet" href=
+    "../../../../../../../../node_modules/bootstrap/dist/css/bootstrap.min.css">
 
 <link rel="stylesheet" href="mainLayout.css">
 
@@ -28,6 +30,8 @@ Collaborators:
 <!-- Load any supplemental Javascript libraries here -->
 <script src=
   "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src=
+  "../../../../../../../../node_modules/jquery/dist/jquery.min.js"></script>
 <script src=
   "https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.2/seedrandom.js">
 </script>
@@ -119,6 +123,11 @@ $(document).on('click', "#buttonIDhere", function(evt)
   // Your code here.
 });
 
+$(document).on('click', "#btn_new_game", function(evt)
+{
+  console.log("Button 'btn_new_game' clicked.");
+});
+
 // keyboard events arrive here
 $(document).on('keydown', function(evt) {
   // Your code here.
@@ -127,6 +136,14 @@ $(document).on('keydown', function(evt) {
 
 </script>
 
+<!-- Additional styling added by me :) -->
+<style>
+  .title_text {
+    font-weight: bold;
+    color: red;
+    text-align: center;
+  }
+</style>
 
 </head>
 
@@ -134,22 +151,27 @@ $(document).on('keydown', function(evt) {
 
 <div class="container">
   <div class="row">
-    <div class="col-md-4" id="firstColumn">
+    <div class="col-md-3" id="firstColumn">
       <div>
-      <!-- Column 1 Code Here -->
-      Column 1
+        <!-- Column 1 Code Here -->
+        <div class="title_text">
+          Candy Crush
+        </div>
 
+        <div id="btn_new_game_div">
+          <input id="btn_new_game" class="btn" value="New Game"></input>
+        </div>
       </div>
   </div>
 
-    <div class="col-md-4" id="mainColumn">
+    <div class="col-md-6" id="mainColumn">
 
       <!-- Column 2 Code Here -->
       Column 2
 
     </div>
 
-    <div class="col-md-4" id="lastColumn">
+    <div class="col-md-3" id="lastColumn">
 
       <!-- Column 3 Code Here -->
       Column 3
