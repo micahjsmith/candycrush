@@ -44,7 +44,7 @@ Collaborators:
 // By default, the first board loaded by your page will be the same 
 // each time you load (which is accomplished by "seeding" the random
 // number generator. This makes testing (and grading!) easier!
-Math.seedrandom(0);
+// Math.seedrandom(0);
 
 
 // A short jQuery extension to read query parameters from the URL.
@@ -82,13 +82,33 @@ if ($.getUrlVar('size') && $.getUrlVar('size') >= 3) {
 // load a rule
 rules = new Rules(board);
 
+// Other globals
+var charDictionary = { 0: 'a', 1: 'b', 2: 'c', 3: 'd', 4: 'e', 5: 'f', 6: 'g', 7: 'h'}; 
+
+function createGameTable() {
+  for (var i=0; i<8; i++){
+    var newRow = "<tr>";
+    for (var j=0; j<8; j++){
+      var cellId = charDictionary[i] + (j+1);
+      newRow = newRow + "<td id=" + '"' + cellId + '">' +
+                      cellId + "</td>";
+    }
+    newRow = newRow + "</tr>";
+    console.log("appending newRow: " + newRow);
+    $( "#game_table > tbody" ).append(newRow);
+  }
+}
+
 // Final initialization entry point: the Javascript code inside this block
 // runs at the end of start-up when the page has finished loading.
 $(document).ready(function()
 {
-  // Your code here.
-});
+  console.log("document ready.");
 
+  // Create game table
+  createGameTable();
+
+});
 
 /* Event Handlers */
 // access the candy object with info.candy
@@ -143,6 +163,11 @@ $(document).on('keydown', function(evt) {
     color: red;
     text-align: center;
   }
+  #game_table {
+    width: 320px;
+    height: 320px;
+    border: 1px solid #000000;
+  }
 </style>
 
 </head>
@@ -168,6 +193,11 @@ $(document).on('keydown', function(evt) {
 
       <!-- Column 2 Code Here -->
       Column 2
+
+      <table id="game_table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
 
     </div>
 
