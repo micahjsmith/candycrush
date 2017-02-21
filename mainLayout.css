@@ -57,3 +57,12 @@
   background-color: green;
   color: #FFFFFF;
 }
+
+.btn_move_disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn_move_enabled {
+  background-color: #00BFFF;
+}

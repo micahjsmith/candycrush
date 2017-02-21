@@ -81,6 +81,7 @@ rules = new Rules(board);
 // Other globals
 var charDictionary = { 0: 'a', 1: 'b', 2: 'c', 3: 'd',
                        4: 'e', 5: 'f', 6: 'g', 7: 'h'}; 
+var directions = ["up","down","right","left"];
 
 function ijToCellId(i, j){
     return charDictionary[i] + (j+1);
@@ -94,24 +95,68 @@ function cellIdToIj(cellId){
   return [i, j];
 }
 
+function cellIdToCandy(cellId){
+  var loc = cellIdToIj(cellId);
+  return board.getCandyAt(loc[0], loc[1]);
+}
+
 function processMoveClick(direction) {
   var cellText = $( "#move_input_text" ).val();
-  var locs = cellIdToIj(cellText);
-  var row = locs[0];
-  var col = locs[1];
-
-  var fromCandy = board.getCandyAt(row, col);
+  var fromCandy = cellIdToCandy(cellText);
   if (rules.isMoveTypeValid(fromCandy, direction)){
     var toCandy = board.getCandyInDirection(fromCandy, direction);
     board.flipCandies(fromCandy, toCandy);
   }
   // Clear text in textbox and set focus
   $( "#move_input_text" ).val("").focus();
+  // Disable all buttons
+  directions.forEach(function(entry){
+    disableMoveButton(entry);
+  });
+}
+
+function disableMoveButton(direction){
+  $( "#" + "btn_move_" + direction ).removeClass("btn_move_enabled").addClass("btn_move_disabled");
+}
+
+function enableMoveButton(direction){
+  $( "#" + "btn_move_" + direction ).removeClass("btn_move_disabled").addClass("btn_move_enabled");
+}
+
+function isValidCell(input_text){
+  try {
+    cellIdToCandy(input_text);
+    return true;
+  } catch(err) {
+    return false;
+  }
+}
+
+// For every key that arrives, we check the textbox to see if a valid cell with
+// a valid move is entered. If so, we enable the appropriate buttons.
+function processMoveInputKeyup(){
+  directions.forEach(function(entry) {
+    disableMoveButton(entry);
+  });
+
+  var input_text = $( "#move_input_text" ).val();
+  if (input_text.length >= 2){
+    if (isValidCell(input_text)){
+      var candy = cellIdToCandy(input_text);
+      directions.forEach(function(entry){
+        if (rules.isMoveTypeValid(candy, entry)){
+          enableMoveButton(entry);
+          return;
+        }
+      });
+    }
+  }
 }
 
 function setCellToColor(cellId, color){
   var color_class = "cell_" + color;
   var cell = $( "#" + cellId );
+  // TODO be careful
   $(cell).removeClass().addClass(color_class);
 }
 
@@ -207,8 +252,9 @@ $(document).on('click', "#btn_move_down", function(evt)
 });
 
 // keyboard events arrive here
-$(document).on('keydown', function(evt) {
-  // Your code here.
+$(document).on('keyup', function(evt) {
+  // Delegate to move-specific handler, to check contents of text area.
+  processMoveInputKeyup();
 });
 
 
@@ -260,19 +306,19 @@ $(document).on('keydown', function(evt) {
           <tbody>
           <tr>
             <td></td>
-            <td><input id="btn_move_up" type="button" class="btn" value="&#8593"></input></td>
+            <td><input id="btn_move_up" type="button" class="btn btn_move_disabled" value="&#8593"></input></td>
             <td></td>
           </tr>
 
           <tr>
-            <td><input id="btn_move_left" type="button" class="btn" value="&#8592"></input></td>
+            <td><input id="btn_move_left" type="button" class="btn btn_move_disabled" value="&#8592"></input></td>
             <td></td>
-            <td><input id="btn_move_right" type="button" class="btn" value="&#8594"></input></td>
+            <td><input id="btn_move_right" type="button" class="btn btn_move_disabled" value="&#8594"></input></td>
           </tr>
 
           <tr>
             <td></td>
-            <td><input id="btn_move_down" type="button" class="btn" value="&#8595"></input></td>
+            <td><input id="btn_move_down" type="button" class="btn btn_move_disabled" value="&#8595"></input></td>
             <td></td>
           </tr>
           </tbody>
