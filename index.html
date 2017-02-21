@@ -155,9 +155,8 @@ function processMoveInputKeyup(){
 
 function setCellToColor(cellId, color){
   var color_class = "cell_" + color;
-  var cell = $( "#" + cellId );
   // TODO be careful
-  $(cell).removeClass().addClass(color_class);
+  $( "#" + cellId ).removeClass().addClass(color_class);
 }
 
 function createGameTable() {
@@ -213,7 +212,12 @@ $(board).on('move', function(e, info)
 // remove a candy from the board
 $(board).on('remove', function(e, info)
 {
-  // Your code here.
+  // Change the colors of the cell
+  var row = info.fromRow;
+  var col = info.fromCol;
+  var color = "empty";
+  var cellId = ijToCellId(row, col);
+  setCellToColor(cellId, color);
 });
 
 // move a candy on the board
@@ -225,7 +229,8 @@ $(board).on('scoreUpdate', function(e, info)
 // Button Events
 $(document).on('click', "#btn_crush_once", function(evt)
 {
-  // Your code here.
+  var crushes = rules.getCandyCrushes();
+  rules.removeCrushes(crushes);
 });
 
 $(document).on('click', "#btn_new_game", function(evt)

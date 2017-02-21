@@ -28,6 +28,11 @@
   }
 }
 
+.cell_empty {
+  background-color: white;
+  color: black;
+}
+
 .cell_yellow {
   background-color: yellow;
   color: #B0B0B0;
@@ -35,27 +40,27 @@
 
 .cell_red {
   background-color: red;
-  color: #FFFFFF;
+  color: white;
 }
 
 .cell_purple {
   background-color: purple;
-  color: #FFFFFF;
+  color: white;
 }
 
 .cell_blue {
   background-color: blue;
-  color: #FFFFFF;
+  color: white;
 }
 
 .cell_orange {
   background-color: orange;
-  color: #FFFFFF;
+  color: white;
 }
 
 .cell_green {
   background-color: green;
-  color: #FFFFFF;
+  color: white;
 }
 
 .btn_move_disabled {
