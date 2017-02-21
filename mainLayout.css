@@ -2,10 +2,28 @@
  * Redistribution of original or derived work requires permission of course staff.
  */
 
-/* REMOVE ME - dashed lines and height for debugging */
-#mainColumn {
-  outline: 1px dashed orange;
-  height: 200px;
+#title_text {
+font-weight: bold;
+color: red;
+text-align: center;
 }
-
-/* Your css code here! */
+#game_table {
+width: 320px;
+height: 320px;
+text-align: center;
+}
+table, th, td {
+border: 1px solid black;
+border-collapse: collapse;
+}
+.wrapper {
+text-align: center;
+}
+.row-no-padding {
+margin-left: 0;
+margin-right: 0;
+[class*="col-"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+}
