@@ -83,6 +83,7 @@ rules = new Rules(board);
 // Other globals
 var charDictionary = { 0: 'a', 1: 'b', 2: 'c', 3: 'd',
                        4: 'e', 5: 'f', 6: 'g', 7: 'h'}; 
+var isCrushingFlag = false;
 
 function ijToCellId(i, j){
     return charDictionary[i] + (j+1);
@@ -90,8 +91,9 @@ function ijToCellId(i, j){
 
 function cellIdToIj(cellId){
   // 'a' is 97
-  var i = cellId.toLowerCase().charCodeAt(0) - 97;
   // '1' is 49
+  var cleanCellId = cellId.trim().toLowerCase();
+  var i = cellId.charCodeAt(0) - 97;
   var j = cellId.charCodeAt(1) - 49;
   return [i, j];
 }
@@ -101,6 +103,20 @@ function cellIdToCandy(cellId){
   return board.getCandyAt(loc[0], loc[1]);
 }
 
+function isValidCell(input_text){
+  try {
+    var loc = cellIdToIj(input_text);
+    if (!(0 <= loc[0] < board.getSize() &&
+          0 <= loc[1] < board.getSize())){
+      return false;
+    }
+  } catch(err) {
+    return false;
+  }
+
+  return true;
+}
+
 function processMoveClick(direction) {
   var cellText = $( "#move_input_text" ).val();
   var fromCandy = cellIdToCandy(cellText);
@@ -108,29 +124,33 @@ function processMoveClick(direction) {
     var toCandy = board.getCandyInDirection(fromCandy, direction);
     board.flipCandies(fromCandy, toCandy);
   }
+
   // Clear text in textbox and set focus
   $( "#move_input_text" ).val("").focus();
-  // Disable all buttons
+
+  // Disable all move buttons
   DIRECTIONS.forEach(function(entry){
     disableMoveButton(entry);
   });
+
+  // Enable crush button
+  enableButton("btn_crush_once");
 }
 
 function disableMoveButton(direction){
-  $( "#" + "btn_move_" + direction ).removeClass("btn_move_enabled").addClass("btn_move_disabled");
+  disableButton("btn_move_" + direction);
+}
+
+function disableButton(id){
+  $( "#" + id ).removeClass("btn_enabled").addClass("btn_disabled");
 }
 
 function enableMoveButton(direction){
-  $( "#" + "btn_move_" + direction ).removeClass("btn_move_disabled").addClass("btn_move_enabled");
+  enableButton("btn_move_" + direction);
 }
 
-function isValidCell(input_text){
-  try {
-    cellIdToCandy(input_text);
-    return true;
-  } catch(err) {
-    return false;
-  }
+function enableButton(id){
+  $( "#" + id ).removeClass("btn_disabled").addClass("btn_enabled");
 }
 
 // For every key that arrives, we check the textbox to see if a valid cell with
@@ -227,12 +247,40 @@ $(board).on('scoreUpdate', function(e, info)
   // Your code here. To be implemented in pset 2.
 });
 
+function setCrushing(bool){
+  if (bool) {
+    disableButton("btn_crush_once");
+    disableMoveInput();
+  } else {
+    enableMoveInput();
+  }
+}
+
+function disableMoveInput() {
+  $( "#move_input_text" ).prop("disabled", true);
+}
+
+function enableMoveInput() {
+  $( "#move_input_text" ).prop("disabled", false);
+}
+
 // Button Events
 $(document).on('click', "#btn_crush_once", function(evt)
 {
   var crushes = rules.getCandyCrushes();
   rules.removeCrushes(crushes);
-  setTimeout(rules.moveCandiesDown, TIMEOUT_REPOPULATE);
+
+  // Dumb asynchronous stuff
+  // Do this with promises? http://stackoverflow.com/a/18625565/2514228
+  setCrushing(true);
+  setTimeout(function() {
+    rules.moveCandiesDown();
+    setCrushing(false);
+    if (rules.getCandyCrushes().length > 0){
+      enableButton("btn_crush_once");
+    }
+  }, TIMEOUT_REPOPULATE);
+
 });
 
 $(document).on('click', "#btn_new_game", function(evt)
@@ -313,19 +361,19 @@ $(document).on('keyup', function(evt) {
           <tbody>
           <tr>
             <td></td>
-            <td><input id="btn_move_up" type="button" class="btn btn_move_disabled" value="&#8593"></input></td>
+            <td><input id="btn_move_up" type="button" class="btn btn_disabled" value="&#8593"></input></td>
             <td></td>
           </tr>
 
           <tr>
-            <td><input id="btn_move_left" type="button" class="btn btn_move_disabled" value="&#8592"></input></td>
+            <td><input id="btn_move_left" type="button" class="btn btn_disabled" value="&#8592"></input></td>
             <td></td>
-            <td><input id="btn_move_right" type="button" class="btn btn_move_disabled" value="&#8594"></input></td>
+            <td><input id="btn_move_right" type="button" class="btn btn_disabled" value="&#8594"></input></td>
           </tr>
 
           <tr>
             <td></td>
-            <td><input id="btn_move_down" type="button" class="btn btn_move_disabled" value="&#8595"></input></td>
+            <td><input id="btn_move_down" type="button" class="btn btn_disabled" value="&#8595"></input></td>
             <td></td>
           </tr>
           </tbody>
@@ -336,7 +384,7 @@ $(document).on('keyup', function(evt) {
 
       <div class="row">
         <div id="btn_crush_once_wrapper" class="wrapper">
-          <input id="btn_crush_once" type="button" class="btn" value="Crush Once"></input>
+          <input id="btn_crush_once" type="button" class="btn btn_disabled" value="Crush Once"></input>
         </div>
       </div>
 

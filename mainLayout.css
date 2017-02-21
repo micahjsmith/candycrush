@@ -63,11 +63,11 @@
   color: white;
 }
 
-.btn_move_disabled {
+.btn_disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.btn_move_enabled {
+.btn_enabled {
   background-color: #00BFFF;
 }
