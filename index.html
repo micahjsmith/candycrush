@@ -254,27 +254,31 @@ $(document).on('keydown', function(evt) {
       </div>
 
       <div class="row">
-        <div class="row"><!-- row-no-padding"> -->
-          <div class="col-md-4"></div>
-          <div class="col-md-4 text-center">
-            <input id="btn_move_up" type="button" class="btn" value="&#8593"></input>
-          </div>
-          <div class="col-md-4"></div>
-          <div class="w-100"></div> <!-- line break -->
-          <div class="col-md-4 text-right">
-            <input id="btn_move_left" type="button" class="btn" value="&#8592"></input>
-          </div>
-          <div class="col-md-4"></div>
-          <div class="col-md-4 text-left">
-            <input id="btn_move_right" type="button" class="btn" value="&#8594"></input>
-          </div>
-          <div class="w-100"></div> <!-- line break -->
-          <div class="col-md-4"></div>
-          <div class="col-md-4 text-center">
-            <input id="btn_move_down" type="button" class="btn" value="&#8595"></input>
-          </div>
-          <div class="col-md-4"></div>
-        </div>
+        <table>
+          <thead></thead>
+
+          <tbody>
+          <tr>
+            <td></td>
+            <td><input id="btn_move_up" type="button" class="btn" value="&#8593"></input></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td><input id="btn_move_left" type="button" class="btn" value="&#8592"></input></td>
+            <td></td>
+            <td><input id="btn_move_right" type="button" class="btn" value="&#8594"></input></td>
+          </tr>
+
+          <tr>
+            <td></td>
+            <td><input id="btn_move_down" type="button" class="btn" value="&#8595"></input></td>
+            <td></td>
+          </tr>
+          </tbody>
+          
+
+        </table>
       </div>
 
       <div class="row">
