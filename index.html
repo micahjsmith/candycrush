@@ -63,6 +63,8 @@ $.extend({
 
 // constants
 var DEFAULT_BOARD_SIZE = 8;
+var TIMEOUT_REPOPULATE = 500;
+var DIRECTIONS         = ["up","down","right","left"];
 
 // data model at global scope for easier debugging
 var board;
@@ -81,7 +83,6 @@ rules = new Rules(board);
 // Other globals
 var charDictionary = { 0: 'a', 1: 'b', 2: 'c', 3: 'd',
                        4: 'e', 5: 'f', 6: 'g', 7: 'h'}; 
-var directions = ["up","down","right","left"];
 
 function ijToCellId(i, j){
     return charDictionary[i] + (j+1);
@@ -110,7 +111,7 @@ function processMoveClick(direction) {
   // Clear text in textbox and set focus
   $( "#move_input_text" ).val("").focus();
   // Disable all buttons
-  directions.forEach(function(entry){
+  DIRECTIONS.forEach(function(entry){
     disableMoveButton(entry);
   });
 }
@@ -135,7 +136,7 @@ function isValidCell(input_text){
 // For every key that arrives, we check the textbox to see if a valid cell with
 // a valid move is entered. If so, we enable the appropriate buttons.
 function processMoveInputKeyup(){
-  directions.forEach(function(entry) {
+  DIRECTIONS.forEach(function(entry) {
     disableMoveButton(entry);
   });
 
@@ -143,7 +144,7 @@ function processMoveInputKeyup(){
   if (input_text.length >= 2){
     if (isValidCell(input_text)){
       var candy = cellIdToCandy(input_text);
-      directions.forEach(function(entry){
+      DIRECTIONS.forEach(function(entry){
         if (rules.isMoveTypeValid(candy, entry)){
           enableMoveButton(entry);
           return;
@@ -231,6 +232,7 @@ $(document).on('click', "#btn_crush_once", function(evt)
 {
   var crushes = rules.getCandyCrushes();
   rules.removeCrushes(crushes);
+  setTimeout(rules.moveCandiesDown, TIMEOUT_REPOPULATE);
 });
 
 $(document).on('click', "#btn_new_game", function(evt)
