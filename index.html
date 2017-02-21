@@ -79,18 +79,23 @@ if ($.getUrlVar('size') && $.getUrlVar('size') >= 3) {
 rules = new Rules(board);
 
 // Other globals
-var charDictionary = { 0: 'a', 1: 'b', 2: 'c', 3: 'd', 4: 'e', 5: 'f', 6: 'g', 7: 'h'}; 
+var charDictionary = { 0: 'a', 1: 'b', 2: 'c', 3: 'd',
+                       4: 'e', 5: 'f', 6: 'g', 7: 'h'}; 
+
+function ijToCellId(i, j){
+    return charDictionary[i] + (j+1);
+}
 
 function createGameTable() {
   for (var i=0; i<8; i++){
     var newRow = "<tr>";
     for (var j=0; j<8; j++){
-      var cellId = charDictionary[i] + (j+1);
+      // Prepare 
+      var cellId = ijToCellId(i,j);
       newRow = newRow + "<td id=" + '"' + cellId + '">' +
                       cellId + "</td>";
     }
     newRow = newRow + "</tr>";
-    console.log("appending newRow: " + newRow);
     $( "#game_table > tbody" ).append(newRow);
   }
 }
@@ -104,6 +109,9 @@ $(document).ready(function()
   // Create game table
   createGameTable();
 
+  // Generate candies
+  var newGame = rules.prepareNewGame();
+  console.log(newGame);
 });
 
 /* Event Handlers */
@@ -112,7 +120,15 @@ $(document).ready(function()
 // add a candy to the board
 $(board).on('add', function(e, info)
 {
-  // Your code here.
+  // Change the colors of the cell
+  var row = info.toRow;
+  var col = info.toCol;
+  var color = info.candy.color;
+  var color_class = "cell_" + color;
+  var cellId = ijToCellId(row, col);
+  var cell = $( "#" + cellId );
+  $(cell).removeClass().addClass(color_class);
+
 });
 
 // move a candy on the board
@@ -142,6 +158,9 @@ $(document).on('click', "#buttonIDhere", function(evt)
 $(document).on('click', "#btn_new_game", function(evt)
 {
   console.log("Button 'btn_new_game' clicked.");
+  board.clear();
+  board.resetScore();
+  rules.prepareNewGame();
 });
 
 // keyboard events arrive here
@@ -158,24 +177,22 @@ $(document).on('keydown', function(evt) {
 
 <div class="container">
   <div class="row">
+
     <div class="col-md-3" id="firstColumn">
-      <div>
-        <!-- Column 1 Code Here -->
-        <div class="title_text">
+
+        <div id="title_text">
           Candy Crush
         </div>
 
-        <div id="btn_new_game_div">
-          <input id="btn_new_game" class="btn" value="New Game"></input>
+        <div id="btn_new_game_wrapper" class="wrapper">
+          <input id="btn_new_game" type="button" class="btn" value="New Game"></input>
         </div>
-      </div>
-  </div>
+
+    </div>
 
     <div class="col-md-6" id="mainColumn">
 
       <!-- Column 2 Code Here -->
-      Column 2
-
       <table id="game_table">
         <thead></thead>
         <tbody></tbody>
@@ -186,9 +203,44 @@ $(document).on('keydown', function(evt) {
     <div class="col-md-3" id="lastColumn">
 
       <!-- Column 3 Code Here -->
-      Column 3
+      <div class="row">
+        <div id="move_input" class="wrapper">
+          <label for="move">Move:</label>
+          <input type="text" id="move_input_text">
+        </div>
+      </div>
 
-    </div>
+      <div class="row">
+        <div class="row"><!-- row-no-padding"> -->
+          <div class="col-md-4"></div>
+          <div class="col-md-4 text-center">
+            <input id="btn_move_up" type="button" class="btn" value="&#8593"></input>
+          </div>
+          <div class="col-md-4"></div>
+          <div class="w-100"></div> <!-- line break -->
+          <div class="col-md-4">
+            <input id="btn_move_left text-right" type="button" class="btn" value="&#8592"></input>
+          </div>
+          <div class="col-md-4"></div>
+          <div class="col-md-4 text-left">
+            <input id="btn_move_right" type="button" class="btn" value="&#8594"></input>
+          </div>
+          <div class="w-100"></div> <!-- line break -->
+          <div class="col-md-4"></div>
+          <div class="col-md-4 text-center">
+            <input id="btn_move_down" type="button" class="btn" value="&#8595"></input>
+          </div>
+          <div class="col-md-4"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div id="btn_crush_once_wrapper" class="wrapper">
+          <input id="btn_crush_once" type="button" class="btn" value="Crush Once"></input>
+        </div>
+      </div>
+
+    </div> <!-- id="lastColumn" -->
   </div> <!-- class="row" -->
 </div> <!-- class="container" -->
 

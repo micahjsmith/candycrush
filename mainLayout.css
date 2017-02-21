@@ -3,27 +3,57 @@
  */
 
 #title_text {
-font-weight: bold;
-color: red;
-text-align: center;
+  font-weight: bold;
+  color: red;
+  text-align: center;
 }
 #game_table {
-width: 320px;
-height: 320px;
-text-align: center;
+  width: 320px;
+  height: 320px;
+  text-align: center;
 }
 table, th, td {
-border: 1px solid black;
-border-collapse: collapse;
+  border: 1px solid black;
+  border-collapse: collapse;
 }
 .wrapper {
-text-align: center;
+  text-align: center;
 }
 .row-no-padding {
-margin-left: 0;
-margin-right: 0;
-[class*="col-"] {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  margin-left: 0;
+  margin-right: 0;
+  [class*="col-"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 }
+
+.cell_yellow {
+  background-color: yellow;
+  color: #B0B0B0;
+}
+
+.cell_red {
+  background-color: red;
+  color: #FFFFFF;
+}
+
+.cell_purple {
+  background-color: purple;
+  color: #FFFFFF;
+}
+
+.cell_blue {
+  background-color: blue;
+  color: #FFFFFF;
+}
+
+.cell_orange {
+  background-color: orange;
+  color: #FFFFFF;
+}
+
+.cell_green {
+  background-color: green;
+  color: #FFFFFF;
 }
