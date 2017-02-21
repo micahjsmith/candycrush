@@ -105,6 +105,8 @@ function processMoveClick(direction) {
     var toCandy = board.getCandyInDirection(fromCandy, direction);
     board.flipCandies(fromCandy, toCandy);
   }
+  // Clear text in textbox and set focus
+  $( "#move_input_text" ).val("").focus();
 }
 
 function setCellToColor(cellId, color){
