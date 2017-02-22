@@ -320,75 +320,61 @@ $(document).on('keyup', function(evt) {
 <body>
 
 <div class="container">
-  <div class="row">
+  <div class="row row-grid">
 
-    <div class="col-md-3" id="firstColumn">
+    <div class="col-md-3 align-self-center" id="firstColumn">
 
-        <div id="title_text">
-          Candy Crush
-        </div>
+      <h1 style="color: red; font-weight: bold; text-align: center;">
+        Candy Crush
+      </h1>
 
-        <div id="btn_new_game_wrapper" class="wrapper">
-          <input id="btn_new_game" type="button" class="btn" value="New Game"></input>
-        </div>
+      <div id="btn_new_game_wrapper" class="wrapper">
+        <input id="btn_new_game" type="button" class="btn" value="New Game"></input>
+      </div>
 
     </div>
 
     <div class="col-md-6" id="mainColumn">
-
-      <!-- Column 2 Code Here -->
-      <table id="game_table">
-        <thead></thead>
-        <tbody></tbody>
-      </table>
-
+      <div class="col-md-12">
+        <table id="game_table" class="center">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="col-md-3" id="lastColumn">
-
-      <!-- Column 3 Code Here -->
-      <div class="row">
-        <div id="move_input" class="wrapper">
-          <label for="move">Move:</label>
-          <input type="text" id="move_input_text">
-        </div>
+    <div class="col-md-3 align-self-center" id="lastColumn">
+      <div id="move_input" class="wrapper">
+        <label for="move">Move:</label>
+        <input type="text" id="move_input_text">
       </div>
 
-      <div class="row">
-        <table>
-          <thead></thead>
-
-          <tbody>
+      <table class="center">
+        <thead></thead>
+        <tbody>
           <tr>
             <td></td>
             <td><input id="btn_move_up" type="button" class="btn btn_disabled" value="&#8593"></input></td>
             <td></td>
           </tr>
-
           <tr>
             <td><input id="btn_move_left" type="button" class="btn btn_disabled" value="&#8592"></input></td>
             <td></td>
             <td><input id="btn_move_right" type="button" class="btn btn_disabled" value="&#8594"></input></td>
           </tr>
-
           <tr>
             <td></td>
             <td><input id="btn_move_down" type="button" class="btn btn_disabled" value="&#8595"></input></td>
             <td></td>
           </tr>
-          </tbody>
-          
+        </tbody>
+      </table>
 
-        </table>
+      <div id="btn_crush_once_wrapper" class="wrapper">
+        <input id="btn_crush_once" type="button" class="btn btn_disabled" value="Crush Once"></input>
       </div>
-
-      <div class="row">
-        <div id="btn_crush_once_wrapper" class="wrapper">
-          <input id="btn_crush_once" type="button" class="btn btn_disabled" value="Crush Once"></input>
-        </div>
-      </div>
-
     </div> <!-- id="lastColumn" -->
+
   </div> <!-- class="row" -->
 </div> <!-- class="container" -->
 

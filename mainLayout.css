@@ -2,11 +2,26 @@
  * Redistribution of original or derived work requires permission of course staff.
  */
 
-#title_text {
-  font-weight: bold;
-  color: red;
-  text-align: center;
+.row.row-grid [class*="col-"] + [class*="col-"] {
+    margin-top: 15px;
 }
+
+@media (min-width: 1200px) {
+    .row.row-grid [class*="col-lg-"] + [class*="col-lg-"] {
+        margin-top: 0;
+    }
+}
+@media (min-width: 992px) {
+    .row.row-grid [class*="col-md-"] + [class*="col-md-"] {
+        margin-top: 0;
+    }
+}
+@media (min-width: 768px) {
+    .row.row-grid [class*="col-sm-"] + [class*="col-sm-"] {
+        margin-top: 0;
+    }
+}
+
 #game_table {
   width: 320px;
   height: 320px;
@@ -16,48 +31,39 @@
   border: 1px solid white;
   border-collapse: collapse;
 }
+table.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .wrapper {
   text-align: center;
-}
-.row-no-padding {
-  margin-left: 0;
-  margin-right: 0;
-  [class*="col-"] {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
 }
 
 .cell_empty {
   background-color: white;
   color: black;
 }
-
 .cell_yellow {
   background-color: yellow;
   color: #B0B0B0;
 }
-
 .cell_red {
   background-color: red;
   color: white;
 }
-
 .cell_purple {
   background-color: purple;
   color: white;
 }
-
 .cell_blue {
   background-color: blue;
   color: white;
 }
-
 .cell_orange {
   background-color: orange;
   color: white;
 }
-
 .cell_green {
   background-color: green;
   color: white;
@@ -67,7 +73,6 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .btn_enabled {
   background-color: #00BFFF;
 }
