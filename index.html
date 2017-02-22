@@ -65,6 +65,8 @@ $.extend({
 var DEFAULT_BOARD_SIZE = 8;
 var TIMEOUT_REPOPULATE = 500;
 var DIRECTIONS         = ["up","down","right","left"];
+var ARROW_KEY_CODES    = [37, 40, 39, 38];
+var ENTER_KEY          = 13;
 
 // data model at global scope for easier debugging
 var board;
@@ -85,6 +87,8 @@ var charDictionary = { 0: 'a', 1: 'b', 2: 'c', 3: 'd',
                        4: 'e', 5: 'f', 6: 'g', 7: 'h'}; 
 var isCrushingFlag = false;
 
+// ----------------------------------------------------------------------------
+// Utility methods
 function ijToCellId(i, j){
     return charDictionary[i] + (j+1);
 }
@@ -104,6 +108,10 @@ function cellIdToCandy(cellId){
 }
 
 function isValidCell(input_text){
+  if (input_text.length != 2){
+    return false;
+  }
+
   try {
     var loc = cellIdToIj(input_text);
     if (!(0 <= loc[0] < board.getSize() &&
@@ -117,26 +125,32 @@ function isValidCell(input_text){
   return true;
 }
 
-function processMoveClick(direction) {
-  var cellText = $( "#move_input_text" ).val();
-  var fromCandy = cellIdToCandy(cellText);
-  if (rules.isMoveTypeValid(fromCandy, direction)){
-    var toCandy = board.getCandyInDirection(fromCandy, direction);
-    board.flipCandies(fromCandy, toCandy);
+function arrowToDirection(which){
+  switch (which)
+  {
+    case 37: {
+      return "left";
+    }
+    case 38: {
+      return "up";
+    }
+    case 39: {
+      return "right";
+    }
+    case 40: {
+      return "down";
+    }
   }
-
-  // Clear text in textbox and set focus
-  $( "#move_input_text" ).val("").focus();
-
-  // Disable all move buttons
-  DIRECTIONS.forEach(function(entry){
-    disableMoveButton(entry);
-  });
-
-  // Enable crush button
-  enableButton("btn_crush_once");
 }
 
+function setCellToColor(cellId, color){
+  var color_class = "cell_" + color;
+  // TODO be careful
+  $( "#" + cellId ).removeClass().addClass(color_class);
+}
+
+// ----------------------------------------------------------------------------
+// Enable/disable input controls
 function disableMoveButton(direction){
   disableButton("btn_move_" + direction);
 }
@@ -153,32 +167,99 @@ function enableButton(id){
   $( "#" + id ).removeClass("btn_disabled").addClass("btn_enabled");
 }
 
+function disableMoveInput() {
+  $( "#move_input_text" ).prop("disabled", true);
+}
+
+function enableMoveInput() {
+  $( "#move_input_text" ).prop("disabled", false);
+}
+
+// ----------------------------------------------------------------------------
+// Input logic
+function processMoveClick(direction) {
+  if ( ! $( "#" + "btn_move_" + direction).hasClass("btn_disabled")) {
+    var input_text = $( "#move_input_text" ).val();
+    if (isValidCell(input_text)){
+      var candy = cellIdToCandy(input_text);
+      if (rules.isMoveTypeValid(candy, direction)){
+        var toCandy = board.getCandyInDirection(candy, direction);
+        board.flipCandies(candy, toCandy);
+        mustCrush(true);
+      }
+    }
+  }
+}
+
 // For every key that arrives, we check the textbox to see if a valid cell with
 // a valid move is entered. If so, we enable the appropriate buttons.
-function processMoveInputKeyup(){
-  DIRECTIONS.forEach(function(entry) {
-    disableMoveButton(entry);
-  });
-
-  var input_text = $( "#move_input_text" ).val();
-  if (input_text.length >= 2){
+function processInputKeyup(){
+  // Check if we must crush now, because if so, we ignore the keyup event completely.
+  // TODO this is not a very efficient way.
+  if (rules.getCandyCrushes().length == 0){
+    var input_text = $( "#move_input_text" ).val();
     if (isValidCell(input_text)){
       var candy = cellIdToCandy(input_text);
       DIRECTIONS.forEach(function(entry){
         if (rules.isMoveTypeValid(candy, entry)){
           enableMoveButton(entry);
           return;
+        } else {
+          disableMoveButton(entry);
         }
       });
     }
   }
 }
 
-function setCellToColor(cellId, color){
-  var color_class = "cell_" + color;
-  // TODO be careful
-  $( "#" + cellId ).removeClass().addClass(color_class);
+function setCrushing(bool){
+  if (bool) {
+    disableButton("btn_crush_once");
+    $( "#" + "move_input_text" ).val("");
+    disableMoveInput();
+  } else {
+    enableMoveInput();
+    $( "#" + "move_input_text" ).focus();
+  }
 }
+
+function mustCrush(bool){
+  if (bool) {
+    // Enable and focus crush button
+    enableButton("btn_crush_once");
+    $( "#btn_crush_once" ).focus();
+
+    // Disable arrows
+    DIRECTIONS.forEach(function(entry){
+      disableMoveButton(entry);
+    });
+
+    // Disable and clear form
+    $( "#move_input_text" ).val("");
+    disableMoveInput();
+  }
+}
+
+function doCrush(){
+  // Can we actually crush?
+  if (rules.getCandyCrushes().length > 0){
+    var crushes = rules.getCandyCrushes();
+    rules.removeCrushes(crushes);
+
+    // Dumb asynchronous stuff
+    // Do this with promises? http://stackoverflow.com/a/18625565/2514228
+    setCrushing(true);
+    setTimeout(function() {
+      rules.moveCandiesDown();
+      if (rules.getCandyCrushes().length > 0){
+        mustCrush(true);
+      } else {
+        setCrushing(false);
+      }
+    }, TIMEOUT_REPOPULATE);
+  }
+}
+
 
 function createGameTable() {
   for (var i=0; i<board.getSize(); i++){
@@ -203,6 +284,9 @@ $(document).ready(function()
 
   // Generate candies
   rules.prepareNewGame();
+
+  // Initialize with focus on input
+  $( "#move_input_text" ).focus();
 });
 
 /* Event Handlers */
@@ -247,40 +331,11 @@ $(board).on('scoreUpdate', function(e, info)
   // Your code here. To be implemented in pset 2.
 });
 
-function setCrushing(bool){
-  if (bool) {
-    disableButton("btn_crush_once");
-    disableMoveInput();
-  } else {
-    enableMoveInput();
-  }
-}
-
-function disableMoveInput() {
-  $( "#move_input_text" ).prop("disabled", true);
-}
-
-function enableMoveInput() {
-  $( "#move_input_text" ).prop("disabled", false);
-}
-
+// ----------------------------------------------------------------------------
 // Button Events
 $(document).on('click', "#btn_crush_once", function(evt)
 {
-  var crushes = rules.getCandyCrushes();
-  rules.removeCrushes(crushes);
-
-  // Dumb asynchronous stuff
-  // Do this with promises? http://stackoverflow.com/a/18625565/2514228
-  setCrushing(true);
-  setTimeout(function() {
-    rules.moveCandiesDown();
-    setCrushing(false);
-    if (rules.getCandyCrushes().length > 0){
-      enableButton("btn_crush_once");
-    }
-  }, TIMEOUT_REPOPULATE);
-
+  doCrush();
 });
 
 $(document).on('click', "#btn_new_game", function(evt)
@@ -288,6 +343,7 @@ $(document).on('click', "#btn_new_game", function(evt)
   board.clear();
   board.resetScore();
   rules.prepareNewGame();
+  $( "#move_input_text" ).focus();
 });
 $(document).on('click', "#btn_move_up", function(evt)
 {
@@ -308,8 +364,15 @@ $(document).on('click', "#btn_move_down", function(evt)
 
 // keyboard events arrive here
 $(document).on('keyup', function(evt) {
+  console.log('keyup: ' + evt.which);
   // Delegate to move-specific handler, to check contents of text area.
-  processMoveInputKeyup();
+  if ($.inArray(evt.which, ARROW_KEY_CODES) != -1) {
+    processMoveClick(arrowToDirection(evt.which));
+  } else if (evt.which == ENTER_KEY) {
+    doCrush();
+  } else {
+    processInputKeyup();
+  }
 });
 
 
