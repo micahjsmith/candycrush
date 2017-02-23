@@ -110,8 +110,12 @@ function cellIdToCandy(cellId){
   return board.getCandyAt(loc[0], loc[1]);
 }
 
+// Input text is valid to refer to cell if
+// - contains exactly two consecutive non-whitespace characters
+// - can parse characters without error
+// - coordinates fit in board size
 function isValidCell(input_text){
-  if (input_text.length != 2){
+  if (input_text.trim().length != 2){
     return false;
   }
 
@@ -197,21 +201,17 @@ function processMoveClick(direction) {
 // For every key that arrives, we check the textbox to see if a valid cell with
 // a valid move is entered. If so, we enable the appropriate buttons.
 function processInputKeyup(){
-  // Check if we must crush now, because if so, we ignore the keyup event completely.
-  // TODO this is not a very efficient way.
-  if (rules.getCandyCrushes().length == 0){
-    var input_text = $( "#move_input_text" ).val();
-    if (isValidCell(input_text)){
-      var candy = cellIdToCandy(input_text);
-      DIRECTIONS.forEach(function(entry){
-        if (rules.isMoveTypeValid(candy, entry)){
-          enableMoveButton(entry);
-          return;
-        } else {
-          disableMoveButton(entry);
-        }
-      });
-    }
+  var input_text = $( "#move_input_text" ).val();
+  if (isValidCell(input_text)){
+    var candy = cellIdToCandy(input_text);
+    DIRECTIONS.forEach(function(entry){
+      if (rules.isMoveTypeValid(candy, entry)){
+        enableMoveButton(entry);
+        return;
+      } else {
+        disableMoveButton(entry);
+      }
+    });
   }
 }
 
@@ -243,9 +243,13 @@ function mustCrush(bool){
   }
 }
 
+function canCrush(){
+  return rules.getCandyCrushes().length > 0;
+}
+
 function doCrush(){
   // Can we actually crush?
-  if (rules.getCandyCrushes().length > 0){
+  if (canCrush()){
     var crushes = rules.getCandyCrushes();
     rules.removeCrushes(crushes);
 
@@ -254,7 +258,7 @@ function doCrush(){
     setCrushing(true);
     setTimeout(function() {
       rules.moveCandiesDown();
-      if (rules.getCandyCrushes().length > 0){
+      if (canCrush()){
         mustCrush(true);
       } else {
         setCrushing(false);
@@ -367,13 +371,13 @@ $(document).on('click', "#btn_move_down", function(evt)
 
 // keyboard events arrive here
 $(document).on('keyup', function(evt) {
-  console.log('keyup: ' + evt.which);
-  // Delegate to move-specific handler, to check contents of text area.
   if ($.inArray(evt.which, ARROW_KEY_CODES) != -1) {
     processMoveClick(arrowToDirection(evt.which));
   } else if (evt.which == ENTER_KEY) {
     doCrush();
-  } else {
+  } else if (evt.target.id == "move_input_text"){
+    // Is this coming directly from the move_input_text?
+    // Delegate to move-specific handler, to check contents of text area.
     processInputKeyup();
   }
 });
@@ -401,12 +405,10 @@ $(document).on('keyup', function(evt) {
     </div>
 
     <div class="col-md-6" id="mainColumn">
-      <div class="col-md-12">
-        <table id="game_table" class="center">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <table id="game_table" class="center">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
     </div>
 
     <div class="col-md-3 align-self-center" id="lastColumn">
