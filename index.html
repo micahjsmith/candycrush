@@ -71,6 +71,8 @@ var TIMEOUT_REPOPULATE = 500;
 var DIRECTIONS         = ["up","down","right","left"];
 var ARROW_KEY_CODES    = [37, 40, 39, 38];
 var ENTER_KEY          = 13;
+var CHAR_CODE_A        = 97;
+var CHAR_CODE_1        = 49;
 
 // data model at global scope for easier debugging
 var board;
@@ -89,20 +91,17 @@ rules = new Rules(board);
 // Other globals
 var charDictionary = { 0: 'a', 1: 'b', 2: 'c', 3: 'd',
                        4: 'e', 5: 'f', 6: 'g', 7: 'h'}; 
-var isCrushingFlag = false;
 
 // ----------------------------------------------------------------------------
 // Utility methods
 function ijToCellId(i, j){
-    return charDictionary[i] + (j+1);
+  return String.fromCharCode(i + CHAR_CODE_A) + (j+1);
 }
 
 function cellIdToIj(cellId){
-  // 'a' is 97
-  // '1' is 49
   var cleanCellId = cellId.trim().toLowerCase();
-  var i = cellId.charCodeAt(0) - 97;
-  var j = cellId.charCodeAt(1) - 49;
+  var i = cleanCellId.charCodeAt(0) - CHAR_CODE_A;
+  var j = cleanCellId.charCodeAt(1) - CHAR_CODE_1;
   return [i, j];
 }
 
