@@ -158,20 +158,20 @@ function setCellToColor(cellId, color){
 
 // ----------------------------------------------------------------------------
 // Enable/disable input controls
-function disableMoveButton(direction){
-  disableButton("btn_move_" + direction);
-}
-
 function disableButton(id){
   $( "#" + id ).removeClass("btn_enabled").addClass("btn_disabled");
 }
 
-function enableMoveButton(direction){
-  enableButton("btn_move_" + direction);
-}
-
 function enableButton(id){
   $( "#" + id ).removeClass("btn_disabled").addClass("btn_enabled");
+}
+
+function disableMoveButton(direction){
+  disableButton("btn_move_" + direction);
+}
+
+function enableMoveButton(direction){
+  enableButton("btn_move_" + direction);
 }
 
 function disableMoveInput() {
@@ -184,6 +184,13 @@ function enableMoveInput() {
 
 // ----------------------------------------------------------------------------
 // Input logic
+
+// We get a click event on our movement arrow buttons. 
+// - do some validation that the button is not disabled and the input text is a
+//   valid cell
+// - check that the desired move is allowed by the rules
+// - flip the candies in question
+// - modify input controls to force a crush
 function processMoveClick(direction) {
   if ( ! $( "#" + "btn_move_" + direction).hasClass("btn_disabled")) {
     var input_text = $( "#move_input_text" ).val();
@@ -198,8 +205,9 @@ function processMoveClick(direction) {
   }
 }
 
-// For every key that arrives, we check the textbox to see if a valid cell with
-// a valid move is entered. If so, we enable the appropriate buttons.
+// A keyup event has originated from the input text area. Check that a
+// a valid cell is entered with an associated valid move. If so, we enable the
+// appropriate buttons.
 function processInputKeyup(){
   var input_text = $( "#move_input_text" ).val();
   if (isValidCell(input_text)){
@@ -215,6 +223,8 @@ function processInputKeyup(){
   }
 }
 
+// Disable/enable buttons during/for the process/completion of computing and drawing the crushes
+// on the board.
 function setCrushing(bool){
   if (bool) {
     disableButton("btn_crush_once");
@@ -226,6 +236,8 @@ function setCrushing(bool){
   }
 }
 
+// A crush is available on the board. Disable everything except the crush
+// button, which we also put in focus.
 function mustCrush(bool){
   if (bool) {
     // Enable and focus crush button
@@ -243,10 +255,17 @@ function mustCrush(bool){
   }
 }
 
+// At least one crush is available.
 function canCrush(){
   return rules.getCandyCrushes().length > 0;
 }
 
+// Process crush
+// - remove crushes
+// - disable controls
+// - move candies down
+// - if more crushes are available, force another crush
+// - else, re-enable controls
 function doCrush(){
   // Can we actually crush?
   if (canCrush()){
@@ -267,7 +286,7 @@ function doCrush(){
   }
 }
 
-
+// Fill in the game table with appropriate td and tr elements.
 function createGameTable() {
   for (var i=0; i<board.getSize(); i++){
     var newRow = "<tr>";
@@ -344,7 +363,6 @@ $(document).on('click', "#btn_crush_once", function(evt)
 {
   doCrush();
 });
-
 $(document).on('click', "#btn_new_game", function(evt)
 {
   board.clear();
@@ -382,7 +400,6 @@ $(document).on('keyup', function(evt) {
   }
 });
 
-
 </script>
 
 </head>
@@ -393,7 +410,6 @@ $(document).on('keyup', function(evt) {
   <div class="row row-grid">
 
     <div class="col-md-3 align-self-center" id="firstColumn">
-
       <h1 style="color: red; font-weight: bold; text-align: center;">
         Candy Crush
       </h1>
@@ -401,7 +417,6 @@ $(document).on('keyup', function(evt) {
       <div id="btn_new_game_wrapper" class="wrapper">
         <input id="btn_new_game" type="button" class="btn" value="New Game"></input>
       </div>
-
     </div>
 
     <div class="col-md-6" id="mainColumn">
