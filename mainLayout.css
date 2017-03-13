@@ -52,35 +52,6 @@ div.box {
   text-align: center;
 }
 
-.cell_empty {
-  background-color: white;
-  color: black;
-}
-.cell_yellow {
-  background-color: yellow;
-  color: #B0B0B0;
-}
-.cell_red {
-  background-color: red;
-  color: white;
-}
-.cell_purple {
-  background-color: purple;
-  color: white;
-}
-.cell_blue {
-  background-color: blue;
-  color: white;
-}
-.cell_orange {
-  background-color: orange;
-  color: white;
-}
-.cell_green {
-  background-color: green;
-  color: white;
-}
-
 .btn_disabled {
   opacity: 0.6;
   cursor: not-allowed;

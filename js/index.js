@@ -9,8 +9,8 @@ const DEFAULT_BOARD_SIZE = 8;
 const MAX_BOARD_SIZE     = 20;
 const TIMEOUT_REPOPULATE = 500;
 const DIRECTIONS         = ["left","up","right","down"];
-const CELL_COLORS        = ["yellow", "red", "purple", "blue", "orange", "green"];
 const ARROW_KEY_CODES    = [37, 38, 39, 40];
+const CELL_COLORS        = ["yellow", "red", "purple", "blue", "orange", "green"];
 const ENTER_KEY          = 13;
 const CHAR_CODE_A        = 97;
 
@@ -69,13 +69,14 @@ function arrowToDirection(keyCode){
   return DIRECTIONS[keyCode - ARROW_KEY_CODES[0]];
 }
 
-const color_classes_to_remove = CELL_COLORS.map(function(val, _, _){
-        return "cell_" + val;
-    }).join(" ") + " cell_empty";
-
 function setCellToColor(cellId, color){
-  var color_class = "cell_" + color;
-  $( "#" + cellId ).removeClass(color_classes_to_remove).addClass(color_class);
+  if (color === "empty"){
+    $( "#" + cellId + " > div > img" ).removeAttr("src");
+  } else {
+    $( "#" + cellId + " > div > img" ).attr({"src": "graphics/{0}-candy.png".format(color),
+                                               "height": "100%",
+                                               "width": "100%"});
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -215,7 +216,8 @@ function createGameTable() {
     for (var j=0; j<board.getSize(); j++){
       // Prepare 
       var cellId = ijToCellId(i,j);
-      newRow = newRow + '<td class="cell" id="{0}"><div class="box">{0}</div></td>'.format(cellId);
+      newRow = newRow + 
+          '<td class="cell" id="{0}"><div class="box"><img src={1}></img></div></td>'.format(cellId,"");
     }
     newRow = newRow + "</tr>";
     $( "#game_table > tbody" ).append(newRow);
