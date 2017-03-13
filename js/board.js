@@ -206,7 +206,7 @@ var Board = function(size)
   {
     if (this.isEmptyLocation(row, col))
     {
-      console.log("removeAt found no candy at " + r + "," + c);
+      console.log("removeAt found no candy at " + row + "," + col);
     }
     else
     {
