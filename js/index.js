@@ -4,31 +4,30 @@
 Math.seedrandom(0);
 
 // constants
-var DEFAULT_BOARD_SIZE = 8;
-var TIMEOUT_REPOPULATE = 500;
-var DIRECTIONS         = ["up","down","right","left"];
-var ARROW_KEY_CODES    = [37, 40, 39, 38];
-var ENTER_KEY          = 13;
-var CHAR_CODE_A        = 97;
-var CHAR_CODE_1        = 49;
+const MIN_BOARD_SIZE     = 3;
+const DEFAULT_BOARD_SIZE = 8;
+const MAX_BOARD_SIZE     = 20;
+const TIMEOUT_REPOPULATE = 500;
+const DIRECTIONS         = ["left","up","right","down"];
+const CELL_COLORS        = ["yellow", "red", "purple", "blue", "orange", "green"];
+const ARROW_KEY_CODES    = [37, 38, 39, 40];
+const ENTER_KEY          = 13;
+const CHAR_CODE_A        = 97;
 
 // data model at global scope for easier debugging
 var board;
 var rules;
 
 // initialize board
-if ($.getUrlVar('size') && $.getUrlVar('size') >= 3) {
-  board = new Board($.getUrlVar('size'));
+var url_var_size = parseInt($.getUrlVar('size'));
+if (url_var_size >= MIN_BOARD_SIZE && url_var_size <= MAX_BOARD_SIZE) {
+    board = new Board(url_var_size);
 } else {
-  board = new Board(DEFAULT_BOARD_SIZE);
+    board = new Board(DEFAULT_BOARD_SIZE);
 }
 
 // load a rule
 rules = new Rules(board);
-
-// Other globals
-var charDictionary = { 0: 'a', 1: 'b', 2: 'c', 3: 'd',
-                       4: 'e', 5: 'f', 6: 'g', 7: 'h'}; 
 
 // ----------------------------------------------------------------------------
 // Utility methods
@@ -37,9 +36,9 @@ function ijToCellId(i, j){
 }
 
 function cellIdToIj(cellId){
-  var cleanCellId = cellId.trim().toLowerCase();
+  var cleanCellId = cellId.toLowerCase().replace(/\s/g,"");
   var i = cleanCellId.charCodeAt(0) - CHAR_CODE_A;
-  var j = cleanCellId.charCodeAt(1) - CHAR_CODE_1;
+  var j = parseInt(cleanCellId.substring(1,cleanCellId.length)) - 1;
   return [i, j];
 }
 
@@ -53,10 +52,6 @@ function cellIdToCandy(cellId){
 // - can parse characters without error
 // - coordinates fit in board size
 function isValidCell(input_text){
-  if (input_text.trim().length != 2){
-    return false;
-  }
-
   try {
     var loc = cellIdToIj(input_text);
     if (!(0 <= loc[0] < board.getSize() &&
@@ -70,28 +65,17 @@ function isValidCell(input_text){
   return true;
 }
 
-function arrowToDirection(which){
-  switch (which)
-  {
-    case 37: {
-      return "left"; 
-    }
-    case 38: {
-      return "up"; 
-    }
-    case 39: {
-      return "right"; 
-    }
-    case 40: {
-      return "down"; 
-    }
-  }
+function arrowToDirection(keyCode){
+  return DIRECTIONS[keyCode - ARROW_KEY_CODES[0]];
 }
+
+const color_classes_to_remove = CELL_COLORS.map(function(val, _, _){
+        return "cell_" + val;
+    }).join(" ") + " cell_empty";
 
 function setCellToColor(cellId, color){
   var color_class = "cell_" + color;
-  // TODO be careful
-  $( "#" + cellId ).removeClass().addClass(color_class);
+  $( "#" + cellId ).removeClass(color_classes_to_remove).addClass(color_class);
 }
 
 // ----------------------------------------------------------------------------
@@ -231,8 +215,7 @@ function createGameTable() {
     for (var j=0; j<board.getSize(); j++){
       // Prepare 
       var cellId = ijToCellId(i,j);
-      newRow = newRow + "<td id=" + '"' + cellId + '">' +
-                      cellId + "</td>";
+      newRow = newRow + '<td class="cell" id="{0}"><div class="box">{0}</div></td>'.format(cellId);
     }
     newRow = newRow + "</tr>";
     $( "#game_table > tbody" ).append(newRow);
@@ -257,7 +240,7 @@ $(document).ready(function()
 // access the candy object with info.candy
 
 // add a candy to the board
-$(board).on('add', function(e, info)
+$(board).on("add", function(e, info)
 {
   // Change the colors of the cell
   var row = info.toRow;
@@ -268,7 +251,7 @@ $(board).on('add', function(e, info)
 });
 
 // move a candy on the board
-$(board).on('move', function(e, info)
+$(board).on("move", function(e, info)
 {
   // Change the colors of the cell
   var row = info.toRow;
@@ -279,7 +262,7 @@ $(board).on('move', function(e, info)
 });
 
 // remove a candy from the board
-$(board).on('remove', function(e, info)
+$(board).on("remove", function(e, info)
 {
   // Change the colors of the cell
   var row = info.fromRow;
@@ -290,43 +273,43 @@ $(board).on('remove', function(e, info)
 });
 
 // move a candy on the board
-$(board).on('scoreUpdate', function(e, info)
+$(board).on("scoreUpdate", function(e, info)
 {
   // Your code here. To be implemented in pset 2.
 });
 
 // ----------------------------------------------------------------------------
 // Button Events
-$(document).on('click', "#btn_crush_once", function(evt)
+$(document).on("click", "#btn_crush_once", function(evt)
 {
   doCrush();
 });
-$(document).on('click', "#btn_new_game", function(evt)
+$(document).on("click", "#btn_new_game", function(evt)
 {
   board.clear();
   board.resetScore();
   rules.prepareNewGame();
   $( "#move_input_text" ).focus();
 });
-$(document).on('click', "#btn_move_up", function(evt)
+$(document).on("click", "#btn_move_up", function(evt)
 {
   processMoveClick("up");
 });
-$(document).on('click', "#btn_move_left", function(evt)
+$(document).on("click", "#btn_move_left", function(evt)
 {
   processMoveClick("left");
 });
-$(document).on('click', "#btn_move_right", function(evt)
+$(document).on("click", "#btn_move_right", function(evt)
 {
   processMoveClick("right");
 });
-$(document).on('click', "#btn_move_down", function(evt)
+$(document).on("click", "#btn_move_down", function(evt)
 {
   processMoveClick("down");
 });
 
 // keyboard events arrive here
-$(document).on('keyup', function(evt) {
+$(document).on("keyup", function(evt) {
   if ($.inArray(evt.which, ARROW_KEY_CODES) != -1) {
     processMoveClick(arrowToDirection(evt.which));
   } else if (evt.which == ENTER_KEY) {
