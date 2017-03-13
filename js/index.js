@@ -3,24 +3,6 @@
 // number generator. This makes testing (and grading!) easier!
 Math.seedrandom(0);
 
-// A short jQuery extension to read query parameters from the URL.
-$.extend({
-  getUrlVars: function() {
-    var vars = [], pair;
-    var pairs = window.location.search.substr(1).split('&');
-    for (var i = 0; i < pairs.length; i++) {
-      pair = pairs[i].split('=');
-      vars.push(pair[0]);
-      vars[pair[0]] = pair[1] &&
-          decodeURIComponent(pair[1].replace(/\+/g, ' '));
-    }
-    return vars;
-  },
-  getUrlVar: function(name) {
-    return $.getUrlVars()[name];
-  }
-});
-
 // constants
 var DEFAULT_BOARD_SIZE = 8;
 var TIMEOUT_REPOPULATE = 500;
