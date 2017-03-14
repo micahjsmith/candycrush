@@ -242,7 +242,7 @@ $(document).ready(function()
 // access the candy object with info.candy
 
 // add a candy to the board
-$(board).on("add", function(e, info)
+$(board).on("add", function(evt, info)
 {
   // Change the colors of the cell
   var row = info.toRow;
@@ -253,7 +253,7 @@ $(board).on("add", function(e, info)
 });
 
 // move a candy on the board
-$(board).on("move", function(e, info)
+$(board).on("move", function(evt, info)
 {
   // Change the colors of the cell
   var row = info.toRow;
@@ -274,10 +274,12 @@ $(board).on("remove", function(e, info)
   setCellToColor(cellId, color);
 });
 
-// move a candy on the board
-$(board).on("scoreUpdate", function(e, info)
+// update score
+$(board).on("scoreUpdate", function(evt, info)
 {
-  // Your code here. To be implemented in pset 2.
+    var new_score = info.score;
+    var last_crush_color = info.candy.color;
+    $( "#span_score" ).text(new_score).css({"color": last_crush_color});
 });
 
 // ----------------------------------------------------------------------------
