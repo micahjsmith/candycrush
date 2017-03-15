@@ -59,3 +59,7 @@ div.box {
 .btn_enabled {
   background-color: #00BFFF;
 }
+
+#span_score_wrapper {
+  background-color: #999999;
+}

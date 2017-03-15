@@ -47,10 +47,12 @@ function cellIdToCandy(cellId){
   return board.getCandyAt(loc[0], loc[1]);
 }
 
-// Input text is valid to refer to cell if
-// - contains exactly two consecutive non-whitespace characters
-// - can parse characters without error
-// - coordinates fit in board size
+/**
+ * Input text is valid to refer to cell if
+ * - contains exactly two consecutive non-whitespace characters
+ * - can parse characters without error
+ * - coordinates fit in board size
+ */
 function isValidCell(input_text){
   try {
     var loc = cellIdToIj(input_text);
@@ -108,12 +110,26 @@ function enableMoveInput() {
 // ----------------------------------------------------------------------------
 // Input logic
 
-// We get a click event on our movement arrow buttons. 
-// - do some validation that the button is not disabled and the input text is a
-//   valid cell
-// - check that the desired move is allowed by the rules
-// - flip the candies in question
-// - modify input controls to force a crush
+/**
+ *
+ */
+function gameTableClickHandler(evt){
+    var id = evt.currentTarget.id;
+    $( "#move_input_text" ).val(id);
+
+    // Handle a fake keyup event to the move input text box to avoid redoing the
+    // logic.
+    processInputKeyup();
+}
+
+/** 
+  * We get a click event on our movement arrow buttons. 
+  * - do some validation that the button is not disabled and the input text is a
+  *   valid cell
+  * - check that the desired move is allowed by the rules
+  * - flip the candies in question
+  * - modify input controls to force a crush
+  */
 function processMoveClick(direction) {
   if ( ! $( "#" + "btn_move_" + direction).hasClass("btn_disabled")) {
     var input_text = $( "#move_input_text" ).val();
@@ -128,9 +144,11 @@ function processMoveClick(direction) {
   }
 }
 
-// A keyup event has originated from the input text area. Check that a
-// a valid cell is entered with an associated valid move. If so, we enable the
-// appropriate buttons.
+/**
+ * A keyup event has originated from the input text area. Check that a
+ * a valid cell is entered with an associated valid move. If so, we enable the
+ * appropriate buttons.
+ */
 function processInputKeyup(){
   var input_text = $( "#move_input_text" ).val();
   if (isValidCell(input_text)){
@@ -146,8 +164,10 @@ function processInputKeyup(){
   }
 }
 
-// Disable/enable buttons during/for the process/completion of computing and drawing the crushes
-// on the board.
+/**
+ * Disable/enable buttons during/for the process/completion of computing and drawing the crushes
+ * on the board.
+ */
 function setCrushing(bool){
   if (bool) {
     disableButton("btn_crush_once");
@@ -159,8 +179,10 @@ function setCrushing(bool){
   }
 }
 
-// A crush is available on the board. Disable everything except the crush
-// button, which we also put in focus.
+/**
+ * A crush is available on the board. Disable everything except the crush
+ * button, which we also put in focus.
+ */
 function mustCrush(bool){
   if (bool) {
     // Enable and focus crush button
@@ -178,17 +200,21 @@ function mustCrush(bool){
   }
 }
 
-// At least one crush is available.
+/**
+ * At least one crush is available.
+ */
 function canCrush(){
   return rules.getCandyCrushes().length > 0;
 }
 
-// Process crush
-// - remove crushes
-// - disable controls
-// - move candies down
-// - if more crushes are available, force another crush
-// - else, re-enable controls
+/**
+ * Process crush
+ * - remove crushes
+ * - disable controls
+ * - move candies down
+ * - if more crushes are available, force another crush
+ * - else, re-enable controls
+ */
 function doCrush(){
   // Can we actually crush?
   if (canCrush()){
@@ -209,7 +235,10 @@ function doCrush(){
   }
 }
 
-// Fill in the game table with appropriate td and tr elements.
+/**
+ * Fill in the game table with appropriate td and tr elements.
+ * We also add mouse press listeners to these elements.
+ */
 function createGameTable() {
   for (var i=0; i<board.getSize(); i++){
     var newRow = "<tr>";
@@ -222,10 +251,14 @@ function createGameTable() {
     newRow = newRow + "</tr>";
     $( "#game_table > tbody" ).append(newRow);
   }
+
+  $( "#game_table > tbody > tr > td" ).click(gameTableClickHandler);
 }
 
-// Final initialization entry point: the Javascript code inside this block
-// runs at the end of start-up when the page has finished loading.
+/**
+ * Final initialization entry point: the Javascript code inside this block
+ * runs at the end of start-up when the page has finished loading.
+ */
 $(document).ready(function()
 {
   // Create game table
@@ -238,8 +271,8 @@ $(document).ready(function()
   $( "#move_input_text" ).focus();
 });
 
-/* Event Handlers */
-// access the candy object with info.candy
+// ----------------------------------------------------------------------------
+// Event handlers
 
 // add a candy to the board
 $(board).on("add", function(evt, info)
@@ -278,12 +311,18 @@ $(board).on("remove", function(e, info)
 $(board).on("scoreUpdate", function(evt, info)
 {
     var new_score = info.score;
-    var last_crush_color = info.candy.color;
-    $( "#span_score" ).text(new_score).css({"color": last_crush_color});
+    $( "#span_score" ).text(new_score)
+    if (info.candy){
+        var last_crush_color = info.candy.color;
+        $( "#span_score_wrapper" ).css({"background-color": last_crush_color});
+    } else {
+        $( "#span_score_wrapper" ).css({"background-color": "#999999"});
+    }
 });
 
 // ----------------------------------------------------------------------------
 // Button Events
+
 $(document).on("click", "#btn_crush_once", function(evt)
 {
   doCrush();
@@ -311,8 +350,6 @@ $(document).on("click", "#btn_move_down", function(evt)
 {
   processMoveClick("down");
 });
-
-// keyboard events arrive here
 $(document).on("keyup", function(evt) {
   if ($.inArray(evt.which, ARROW_KEY_CODES) != -1) {
     processMoveClick(arrowToDirection(evt.which));
