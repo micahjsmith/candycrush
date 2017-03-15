@@ -56,8 +56,8 @@ function cellIdToCandy(cellId){
 function isValidCell(input_text){
   try {
     var loc = cellIdToIj(input_text);
-    if (!(0 <= loc[0] < board.getSize() &&
-          0 <= loc[1] < board.getSize())){
+    if (!( (0 <= loc[0]) && (loc[0] < board.getSize()) &&
+           (0 <= loc[1]) && (loc[1] < board.getSize()) )){
       return false;
     }
   } catch(err) {
