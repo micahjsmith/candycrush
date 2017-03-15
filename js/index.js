@@ -4,6 +4,7 @@
 Math.seedrandom(0);
 
 // constants
+const BOARD_SIZE_PX      = 320;
 const MIN_BOARD_SIZE     = 3;
 const DEFAULT_BOARD_SIZE = 8;
 const MAX_BOARD_SIZE     = 20;
@@ -117,6 +118,17 @@ function processShowMove(){
     var move = rules.getRandomValidMove();
     if (!move){
         window.alert("No valid moves remain. Try a new game!");
+    } else {
+        var cellWidth = BOARD_SIZE_PX / board.getSize();
+        var l = cellWidth/2;
+        var h = l;
+        var x = move.candy.row * cellWidth + l;
+        var y = move.candy.col * cellWidth + h;
+        var d = move.direction;
+        console.log(l, h, x, y, cellWidth);
+        //ctx.fillRect(l, h, x, y);
+        console.log(ctx);
+        ctx.fillRect(0,0,cellWidth, cellWidth);
     }
 }
 
@@ -262,7 +274,12 @@ function createGameTable() {
     $( "#game_table > tbody" ).append(newRow);
   }
 
+  // Add click handlers.
   $( "#game_table > tbody > tr > td" ).click(gameTableClickHandler);
+
+  // Init canvas context.
+  var canvas = document.getElementById("canvas");
+  ctx = canvas.getContext("2d");
 }
 
 /**
