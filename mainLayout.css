@@ -22,7 +22,15 @@
     }
 }
 
+#canvas_and_table_container {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  margin: 0px auto;
+}
+
 #game_table {
+  position: absolute;
   width: 320px;
   height: 320px;
   text-align: center;
@@ -31,10 +39,6 @@
 #game_table * {
   border: 1px solid white;
   border-collapse: collapse;
-}
-table.center {
-  margin-left: auto;
-  margin-right: auto;
 }
 td.cell {
   position: relative;
@@ -48,6 +52,12 @@ div.box {
   overflow: hidden;
 }
 
+#canvas {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+}
+
 .wrapper {
   text-align: center;
 }
@@ -59,6 +69,7 @@ div.box {
 .btn_enabled {
   background-color: #00BFFF;
 }
+
 
 #span_score_wrapper {
   background-color: #999999;

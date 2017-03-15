@@ -51,16 +51,25 @@ Collaborators:
 
         <p></p>
 
-        <div id="btn_new_game_wrapper" class="wrapper">
+        <div class="wrapper">
           <input id="btn_new_game" type="button" class="btn" value="New Game"></input>
+        </div>
+
+        <p></p>
+
+        <div class="wrapper">
+          <input id="btn_show_move" type="button" class="btn" value="Show Move"></input>
         </div>
       </div>
 
       <div class="col-md-6" id="mainColumn">
-        <table id="game_table" class="center">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
+        <div id="canvas_and_table_container">
+          <table id="game_table">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        <canvas id="canvas">Your browser is not supported.</canvas>
+        </div>
       </div>
 
       <div class="col-md-3 align-self-center" id="lastColumn">

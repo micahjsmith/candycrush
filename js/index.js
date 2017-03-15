@@ -113,6 +113,16 @@ function enableMoveInput() {
 /**
  *
  */
+function processShowMove(){
+    var move = rules.getRandomValidMove();
+    if (!move){
+        window.alert("No valid moves remain. Try a new game!");
+    }
+}
+
+/**
+ *
+ */
 function gameTableClickHandler(evt){
     var id = evt.currentTarget.id;
     $( "#move_input_text" ).val(id);
@@ -333,6 +343,9 @@ $(document).on("click", "#btn_new_game", function(evt)
   board.resetScore();
   rules.prepareNewGame();
   $( "#move_input_text" ).focus();
+});
+$(document).on("click", "#btn_show_move", function(evt){
+  processShowMove();
 });
 $(document).on("click", "#btn_move_up", function(evt)
 {
