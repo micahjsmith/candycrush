@@ -36,10 +36,6 @@
   text-align: center;
   table-layout: fixed;
 }
-#game_table * {
-  border: 1px solid white;
-  border-collapse: collapse;
-}
 td.cell {
   position: relative;
 }
@@ -49,7 +45,12 @@ div.box {
   left: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
+}
+
+div.box1 {
+  position: relative;
+  height: 100%;
+  width: 100%;
 }
 
 #canvas {

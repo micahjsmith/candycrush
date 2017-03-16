@@ -77,7 +77,7 @@ function setCellToColor(cellId, color) {
   if (color === "empty"){
     //pass
   } else {
-    $( "#" + cellId + " > div > img" ).attr({
+    $( cellSelectorString(cellId) ).attr({
       "src"    : "graphics/{0}-candy.png".format(color),
       "height" : "100%",
       "width"  : "100%"
@@ -328,7 +328,7 @@ function createGameTable() {
       // Prepare 
       var cellId = ijToCellId(i,j);
       newRow = newRow + 
-        '<td class="cell" id="{0}"><div class="box"><img src={1}></img></div></td>'.format(cellId,"");
+        '<td class="cell" id="{0}"><div class="box"><div class="box1"><img style="position: absolute; top: 0px; left: 0px;" src={1}></img></div></div></td>'.format(cellId,"");
     }
     newRow = newRow + "</tr>";
     $( "#game_table > tbody" ).append(newRow);
@@ -341,6 +341,11 @@ function createGameTable() {
   var canvas = document.getElementById("canvas");
   ctx = canvas.getContext("2d");
 }
+
+function cellSelectorString(cellId) {
+  return "#" + cellId + " > div > div > img"
+}
+
 
 /**
  * Final initialization entry point: the Javascript code inside this block
@@ -369,7 +374,7 @@ $(board).on("add", function(evt, info) {
   var cellId = ijToCellId(row, col);
 
   console.log("processing add {0}".format(cellId));
-  $("#" + cellId + " > div > img").animate(
+  $( cellSelectorString(cellId) ).animate(
     {opacity: 1},
     0,
     function(){
@@ -397,7 +402,7 @@ $(board).on("move", function(evt, info) {
   var col = info.toCol;
   var color = info.candy.color;
   var cellId = ijToCellId(row, col);
-  $("#" + cellId + " > div > img").animate(
+  $( cellSelectorString(cellId) ).animate(
     {opacity: 1},
     0,
     function(){
@@ -414,7 +419,7 @@ $(board).on("remove", function(evt, info) {
   var cellId = ijToCellId(row, col);
 
   console.log("processing remove {0}".format(cellId));
-  $("#" + cellId + " > div > img").animate(
+  $( cellSelectorString(cellId) ).animate(
     { opacity: [0, "swing"] },
     1000,
     function(){console.log("processing remove {0}...complete".format(cellId))}
