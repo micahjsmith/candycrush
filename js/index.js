@@ -4,16 +4,18 @@
 Math.seedrandom(0);
 
 // constants
-const BOARD_SIZE_PX      = 320;
-const MIN_BOARD_SIZE     = 3;
-const DEFAULT_BOARD_SIZE = 8;
-const MAX_BOARD_SIZE     = 20;
-const TIMEOUT_REPOPULATE = 500;
-const DIRECTIONS         = ["left","up","right","down"];
-const ARROW_KEY_CODES    = [37, 38, 39, 40];
-const CELL_COLORS        = ["yellow", "red", "purple", "blue", "orange", "green"];
-const ENTER_KEY          = 13;
-const CHAR_CODE_A        = 97;
+const BOARD_SIZE_PX           = 320;
+const MIN_BOARD_SIZE          = 3;
+const DEFAULT_BOARD_SIZE      = 8;
+const MAX_BOARD_SIZE          = 20;
+const TIMEOUT_REPOPULATE      = 500;
+const DIRECTIONS              = ["left","up","right","down"];
+const ARROW_KEY_CODES         = [37, 38, 39, 40];
+const CELL_COLORS             = ["yellow", "red", "purple", "blue", "orange", "green"];
+const ENTER_KEY               = 13;
+const CHAR_CODE_A             = 97;
+const MOVE_ANIMATION_DURATION = 160;
+const REMV_ANIMATION_DURATION = 500;
 
 // data model at global scope for easier debugging
 var board;
@@ -26,6 +28,8 @@ if (url_var_size >= MIN_BOARD_SIZE && url_var_size <= MAX_BOARD_SIZE) {
 } else {
   board = new Board(DEFAULT_BOARD_SIZE);
 }
+
+var preparing_new_game = true;
 
 // load a rule
 rules = new Rules(board);
@@ -280,7 +284,7 @@ function animateMove(fromRow, fromCol, row, col, color){
         top: "0px",
         left: "0px"
       },
-      160,
+      MOVE_ANIMATION_DURATION,
       "swing",
       function(){ /* pass */ }
     );
@@ -377,6 +381,8 @@ function cellSelectorString(cellId) {
  * runs at the end of start-up when the page has finished loading.
  */
 $(document).ready(function() {
+  preparing_new_game = true;
+
   // Create game table
   createGameTable();
 
@@ -385,6 +391,8 @@ $(document).ready(function() {
 
   // Initialize with focus on input
   $( "#move_input_text" ).focus();
+
+  preparing_new_game = false;
 });
 
 // ----------------------------------------------------------------------------
@@ -393,25 +401,32 @@ $(document).ready(function() {
 // add a candy to the board
 $(board).on("add", function(evt, info) {
   // Change the colors of the cell
-  var row = info.toRow;
-  var col = info.toCol;
-  var color = info.candy.color;
-  
-  fromRow = -1;
-  fromCol = col;
+  var fromRow = -1;
+  var fromCol = col;
+  var row     = info.toRow;
+  var col     = info.toCol;
+  var color   = info.candy.color;
 
-  animateMove(fromRow, fromCol, row, col, color);
+  if (!preparing_new_game){
+    animateMove(fromRow, fromCol, row, col, color);
+  } else {
+    var cellId = ijToCellId(row, col);
+    setCellToColor(cellId, color);
+    $( cellSelectorString(cellId) ).queue(function(){
+      $(this).css({opacity: 1});
+      $(this).dequeue();
+    });
+  }
 });
 
 // move a candy on the board
-
 $(board).on("move", function(evt, info) {
   // Change the colors of the cell
   var fromRow = info.fromRow;
   var fromCol = info.fromCol;
-  var row = info.toRow;
-  var col = info.toCol;
-  var color = info.candy.color;
+  var row     = info.toRow;
+  var col     = info.toCol;
+  var color   = info.candy.color;
 
   animateMove(fromRow, fromCol, row, col, color);
 });
@@ -423,10 +438,17 @@ $(board).on("remove", function(evt, info) {
   var col = info.fromCol;
   var cellId = ijToCellId(row, col);
 
-  $( cellSelectorString(cellId) ).animate(
-    { opacity: [0, "swing"] },
-    500
-  );
+  if (!preparing_new_game){
+    $( cellSelectorString(cellId) ).animate(
+      { opacity: [0, "swing"] },
+      REMV_ANIMATION_DURATION 
+    );
+  } else {
+    $( cellSelectorString(cellId) ).queue(function(){
+      $(this).css({opacity: 0});
+      $(this).dequeue();
+    });
+  }
 });
 
 // update score
@@ -448,13 +470,14 @@ $(document).on("click", "#btn_crush_once", function(evt) {
   doCrush();
 });
 $(document).on("click", "#btn_new_game", function(evt) {
+  preparing_new_game = true;
   board.clear();
   board.resetScore();
   rules.prepareNewGame();
   $( "#move_input_text" ).focus();
-
   $("#btn_show_move").removeClass("btn_disabled btn_enabled");
   $("#btn_new_game").removeClass("btn_disabled btn_enabled");
+  preparing_new_game = false;
 });
 $(document).on("click", "#btn_show_move", function(evt){
   processShowMove(evt);
