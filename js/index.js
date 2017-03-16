@@ -260,6 +260,32 @@ function setCrushing(bool) {
   }
 }
 
+function animateMove(fromRow, fromCol, row, col, color){
+  var cellId = ijToCellId(row, col);
+
+  var cw = BOARD_SIZE_PX / board.getSize();
+  var dx = (fromCol - col) * cw;
+  var dy = (fromRow - row) * cw;
+
+  $( cellSelectorString(cellId) )
+    .queue(function() {
+      setCellToColor(cellId, color);
+      $(this).css({
+        opacity: 1,
+        top: "{0}px".format(dy),
+        left: "{0}px".format(dx)
+      });
+      $(this).dequeue(); })
+    .animate({
+        top: "0px",
+        left: "0px"
+      },
+      160,
+      "swing",
+      function(){ /* pass */ }
+    );
+}
+
 /**
  * A crush is available on the board. Disable everything except the crush
  * button, which we also put in focus.
@@ -370,15 +396,11 @@ $(board).on("add", function(evt, info) {
   var row = info.toRow;
   var col = info.toCol;
   var color = info.candy.color;
-  var cellId = ijToCellId(row, col);
+  
+  fromRow = -1;
+  fromCol = col;
 
-  $( cellSelectorString(cellId) ).animate(
-    {opacity: 1},
-    0,
-    function(){
-      setCellToColor(cellId, color);
-    }
-    );
+  animateMove(fromRow, fromCol, row, col, color);
 });
 
 // move a candy on the board
@@ -390,28 +412,8 @@ $(board).on("move", function(evt, info) {
   var row = info.toRow;
   var col = info.toCol;
   var color = info.candy.color;
-  var cellId = ijToCellId(row, col);
 
-  var cw = BOARD_SIZE_PX / board.getSize();
-  var dx = (col - fromCol) * cw;
-  var dy = -(row - fromRow) * cw;
-
-  $( cellSelectorString(cellId) )
-    .queue(function() {
-      setCellToColor(cellId, color);
-      $(this).css({
-        opacity: 1,
-        top: "{0}px".format(dy),
-        left: "{0}px".format(dx)
-      });
-      $(this).dequeue(); })
-    .animate({
-        top: "0px",
-        left: "0px"
-      },
-      200,
-      function(){ /* pass */ }
-    );
+  animateMove(fromRow, fromCol, row, col, color);
 });
 
 // remove a candy from the board
