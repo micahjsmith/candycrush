@@ -112,24 +112,81 @@ function enableMoveInput() {
 // Input logic
 
 /**
+ * Draw arrow from point (x,y) with length l in direction dir.
+ * Can also modify the parameters tw (tail width) and f (fraction of arrow taken
+ * up by head).
+ */
+function drawArrow(x,y,l,dir){
+    ctx.save();
+
+    var tw = 8;
+    var f = 0.5;
+
+    ctx.translate(x,y);
+
+    if (dir === "left"){
+        ctx.rotate(Math.PI);
+    } else if (dir === "right"){
+        // pass
+    } else if (dir === "up"){
+        ctx.rotate(-Math.PI/2);
+    } else if (dir === "down"){
+        ctx.rotate(Math.PI/2);
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(0, -tw/2);
+    ctx.lineTo(l*(1-f), -tw/2);
+    ctx.lineTo(l*(1-f), -tw);
+    ctx.lineTo(l, 0);
+    ctx.lineTo(l*(1-f), tw);
+    ctx.lineTo(l*(1-f), tw/2);
+    ctx.lineTo(0, tw/2);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}
+
+/**
+ * Function called to handle case where Show Move button is pressed but no valid
+ * moves remain. We show a popup and force user to click New Game.
+ */
+function processNoValidMovesRemain(){
+    window.alert("No valid moves remain. Try a new game!");
+    $(".btn").removeClass("btn_enabled").addClass("btn_disabled");
+    $("#btn_new_game").removeClass("btn_disabled").addClass("btn_enabled");
+}
+
+/**
  *
  */
-function processShowMove(){
+function processShowMove(evt){
+    clearCanvas();
+
     var move = rules.getRandomValidMove();
     if (!move){
-        window.alert("No valid moves remain. Try a new game!");
+        processNoValidMovesRemain();
     } else {
-        var cellWidth = BOARD_SIZE_PX / board.getSize();
-        var l = cellWidth/2;
-        var h = l;
-        var x = move.candy.row * cellWidth + l;
-        var y = move.candy.col * cellWidth + h;
+        var w = BOARD_SIZE_PX / board.getSize();
+        var x = move.candy.col * cellWidth + cellWidth/2;
+        var y = move.candy.row * cellWidth + cellWidth/2;
         var d = move.direction;
-        console.log(l, h, x, y, cellWidth);
-        //ctx.fillRect(l, h, x, y);
-        console.log(ctx);
-        ctx.fillRect(0,0,cellWidth, cellWidth);
+        drawArrow(x,y,w,d);
     }
+}
+
+/**
+ * Clear the entire canvas, ensuring that prior modifications to the
+ * transformation matrix do not mess up.
+ */
+function clearCanvas(){
+    ctx.save();
+    ctx.setTransform(1,0,0,1,0,0);
+    var canvas = document.getElementById("canvas");
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    ctx.restore();
 }
 
 /**
@@ -360,9 +417,12 @@ $(document).on("click", "#btn_new_game", function(evt)
   board.resetScore();
   rules.prepareNewGame();
   $( "#move_input_text" ).focus();
+
+  $("#btn_show_move").removeClass("btn_disabled btn_enabled");
+  $("#btn_new_game").removeClass("btn_disabled btn_enabled");
 });
 $(document).on("click", "#btn_show_move", function(evt){
-  processShowMove();
+  processShowMove(evt);
 });
 $(document).on("click", "#btn_move_up", function(evt)
 {
@@ -390,4 +450,11 @@ $(document).on("keyup", function(evt) {
     // Delegate to move-specific handler, to check contents of text area.
     processInputKeyup();
   }
+});
+
+// Clear canvas once any button *but* "Show Move" is pressed.
+$(document).on("click", ".btn", function(evt){
+    if (evt.target.id !== "btn_show_move"){
+        clearCanvas();
+    }
 });

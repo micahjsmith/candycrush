@@ -12,6 +12,8 @@ Collaborators:
     (https://jsfiddle.net/unomrrrh/)
   - Used js String.prototype.format from @fearphage
     (http://stackoverflow.com/a/4673436/2514228)
+  - Used js clearCanvas from @Prestaul
+    (http://stackoverflow.com/a/6722031/2514228)
 -->
 
 <html>
@@ -70,7 +72,7 @@ Collaborators:
             <tbody></tbody>
           </table>
 
-          <canvas id="canvas">
+          <canvas id="canvas" width="320" height="320">
             Your browser is not supported.
           </canvas>
 
@@ -78,6 +80,7 @@ Collaborators:
       </div>
 
       <div class="col-md-3 align-self-center" id="lastColumn">
+
         <div id="move_input" class="wrapper">
           <label for="move">Move:</label>
           <input type="text" id="move_input_text">
@@ -85,26 +88,28 @@ Collaborators:
 
         <p></p>
 
-        <table class="center">
-          <thead></thead>
-          <tbody>
-            <tr>
-              <td></td>
-              <td><input id="btn_move_up" type="button" class="btn btn_disabled" value="&#8593"></input></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td><input id="btn_move_left" type="button" class="btn btn_disabled" value="&#8592"></input></td>
-              <td></td>
-              <td><input id="btn_move_right" type="button" class="btn btn_disabled" value="&#8594"></input></td>
-            </tr>
-            <tr>
-              <td></td>
-              <td><input id="btn_move_down" type="button" class="btn btn_disabled" value="&#8595"></input></td>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
+        <div>
+          <table class="center" style="margin: 0px auto">
+            <thead></thead>
+            <tbody>
+              <tr>
+                <td></td>
+                <td><input id="btn_move_up" type="button" class="btn btn_disabled" value="&#8593"></input></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><input id="btn_move_left" type="button" class="btn btn_disabled" value="&#8592"></input></td>
+                <td></td>
+                <td><input id="btn_move_right" type="button" class="btn btn_disabled" value="&#8594"></input></td>
+              </tr>
+              <tr>
+                <td></td>
+                <td><input id="btn_move_down" type="button" class="btn btn_disabled" value="&#8595"></input></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <p></p>
 
