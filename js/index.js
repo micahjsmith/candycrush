@@ -223,7 +223,7 @@ function processMoveClick(direction) {
       if (rules.isMoveTypeValid(candy, direction)){
         var toCandy = board.getCandyInDirection(candy, direction);
         board.flipCandies(candy, toCandy);
-        mustCrush(true);
+        doCrush();
       }
     }
   }
@@ -255,7 +255,10 @@ function processInputKeyup() {
  */
 function setCrushing(bool) {
   if (bool) {
-    disableButton("btn_crush_once");
+    // Disable arrows
+    DIRECTIONS.forEach(function(entry){
+      disableMoveButton(entry);
+    });
     $( "#" + "move_input_text" ).val("");
     disableMoveInput();
   } else {
@@ -291,27 +294,6 @@ function animateMove(fromRow, fromCol, row, col, color){
 }
 
 /**
- * A crush is available on the board. Disable everything except the crush
- * button, which we also put in focus.
- */
-function mustCrush(bool) {
-  if (bool) {
-    // Enable and focus crush button
-    enableButton("btn_crush_once");
-    $( "#btn_crush_once" ).focus();
-
-    // Disable arrows
-    DIRECTIONS.forEach(function(entry){
-      disableMoveButton(entry);
-    });
-
-    // Disable and clear form
-    $( "#move_input_text" ).val("");
-    disableMoveInput();
-  }
-}
-
-/**
  * At least one crush is available.
  */
 function canCrush() {
@@ -338,7 +320,7 @@ function doCrush() {
     setTimeout(function() {
       rules.moveCandiesDown();
       if (canCrush()){
-        mustCrush(true);
+        doCrush();
       } else {
         setCrushing(false);
       }
@@ -466,9 +448,6 @@ $(board).on("scoreUpdate", function(evt, info) {
 // ----------------------------------------------------------------------------
 // Button Events
 
-$(document).on("click", "#btn_crush_once", function(evt) {
-  doCrush();
-});
 $(document).on("click", "#btn_new_game", function(evt) {
   preparing_new_game = true;
   board.clear();
