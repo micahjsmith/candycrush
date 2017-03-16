@@ -73,7 +73,6 @@ function arrowToDirection(keyCode) {
 }
 
 function setCellToColor(cellId, color) {
-  console.log("setting cell {0} to color {1}".format(cellId, color));
   if (color === "empty"){
     //pass
   } else {
@@ -373,41 +372,45 @@ $(board).on("add", function(evt, info) {
   var color = info.candy.color;
   var cellId = ijToCellId(row, col);
 
-  console.log("processing add {0}".format(cellId));
   $( cellSelectorString(cellId) ).animate(
     {opacity: 1},
     0,
     function(){
       setCellToColor(cellId, color);
-      console.log("processing add {0}...complete".format(cellId));
     }
     );
-
-  // $("#" + cellId + " > div > img").queue(function(){
-  //     console.log("processing add...animating {0}".format(cellId));
-  //     $(this).animate(
-  //       {
-  //         opacity: "1"
-  //       },
-  //       0
-  //     );
-  //     $(this).dequeue();
-  // });
 });
 
 // move a candy on the board
+
 $(board).on("move", function(evt, info) {
   // Change the colors of the cell
+  var fromRow = info.fromRow;
+  var fromCol = info.fromCol;
   var row = info.toRow;
   var col = info.toCol;
   var color = info.candy.color;
   var cellId = ijToCellId(row, col);
-  $( cellSelectorString(cellId) ).animate(
-    {opacity: 1},
-    0,
-    function(){
+
+  var cw = BOARD_SIZE_PX / board.getSize();
+  var dx = (col - fromCol) * cw;
+  var dy = -(row - fromRow) * cw;
+
+  $( cellSelectorString(cellId) )
+    .queue(function() {
       setCellToColor(cellId, color);
-    }
+      $(this).css({
+        opacity: 1,
+        top: "{0}px".format(dy),
+        left: "{0}px".format(dx)
+      });
+      $(this).dequeue(); })
+    .animate({
+        top: "0px",
+        left: "0px"
+      },
+      200,
+      function(){ /* pass */ }
     );
 });
 
@@ -418,24 +421,10 @@ $(board).on("remove", function(evt, info) {
   var col = info.fromCol;
   var cellId = ijToCellId(row, col);
 
-  console.log("processing remove {0}".format(cellId));
   $( cellSelectorString(cellId) ).animate(
     { opacity: [0, "swing"] },
-    1000,
-    function(){console.log("processing remove {0}...complete".format(cellId))}
-    );
-
-  // $("#" + cellId + " > div > img").queue(function(){
-  //     console.log("processing remove...animating {0}".format(cellId));
-  //     $(this).animate(
-  //       {
-  //         opacity: 0
-  //       },
-  //       5000
-  //       , function(){ $(this).dequeue(); }
-  //     );
-  // });
-
+    500
+  );
 });
 
 // update score
