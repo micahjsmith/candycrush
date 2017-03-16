@@ -22,9 +22,9 @@ var rules;
 // initialize board
 var url_var_size = parseInt($.getUrlVar('size'));
 if (url_var_size >= MIN_BOARD_SIZE && url_var_size <= MAX_BOARD_SIZE) {
-    board = new Board(url_var_size);
+  board = new Board(url_var_size);
 } else {
-    board = new Board(DEFAULT_BOARD_SIZE);
+  board = new Board(DEFAULT_BOARD_SIZE);
 }
 
 // load a rule
@@ -32,18 +32,18 @@ rules = new Rules(board);
 
 // ----------------------------------------------------------------------------
 // Utility methods
-function ijToCellId(i, j){
+function ijToCellId(i, j) {
   return String.fromCharCode(i + CHAR_CODE_A) + (j+1);
 }
 
-function cellIdToIj(cellId){
+function cellIdToIj(cellId) {
   var cleanCellId = cellId.toLowerCase().replace(/\s/g,"");
   var i = cleanCellId.charCodeAt(0) - CHAR_CODE_A;
   var j = parseInt(cleanCellId.substring(1,cleanCellId.length)) - 1;
   return [i, j];
 }
 
-function cellIdToCandy(cellId){
+function cellIdToCandy(cellId) {
   var loc = cellIdToIj(cellId);
   return board.getCandyAt(loc[0], loc[1]);
 }
@@ -54,13 +54,13 @@ function cellIdToCandy(cellId){
  * - can parse characters without error
  * - coordinates fit in board size
  */
-function isValidCell(input_text){
+function isValidCell(input_text) {
   try {
     var loc = cellIdToIj(input_text);
     if (!( (0 <= loc[0]) && (loc[0] < board.getSize()) &&
            (0 <= loc[1]) && (loc[1] < board.getSize()) )){
-      return false;
-    }
+            return false;
+          }
   } catch(err) {
     return false;
   }
@@ -68,35 +68,38 @@ function isValidCell(input_text){
   return true;
 }
 
-function arrowToDirection(keyCode){
+function arrowToDirection(keyCode) {
   return DIRECTIONS[keyCode - ARROW_KEY_CODES[0]];
 }
 
-function setCellToColor(cellId, color){
+function setCellToColor(cellId, color) {
+  console.log("setting cell {0} to color {1}".format(cellId, color));
   if (color === "empty"){
-    $( "#" + cellId + " > div > img" ).removeAttr("src");
+    //pass
   } else {
-    $( "#" + cellId + " > div > img" ).attr({"src": "graphics/{0}-candy.png".format(color),
-                                               "height": "100%",
-                                               "width": "100%"});
+    $( "#" + cellId + " > div > img" ).attr({
+      "src"    : "graphics/{0}-candy.png".format(color),
+      "height" : "100%",
+      "width"  : "100%"
+    });
   }
 }
 
 // ----------------------------------------------------------------------------
 // Enable/disable input controls
-function disableButton(id){
+function disableButton(id) {
   $( "#" + id ).removeClass("btn_enabled").addClass("btn_disabled");
 }
 
-function enableButton(id){
+function enableButton(id) {
   $( "#" + id ).removeClass("btn_disabled").addClass("btn_enabled");
 }
 
-function disableMoveButton(direction){
+function disableMoveButton(direction) {
   disableButton("btn_move_" + direction);
 }
 
-function enableMoveButton(direction){
+function enableMoveButton(direction) {
   enableButton("btn_move_" + direction);
 }
 
@@ -116,99 +119,99 @@ function enableMoveInput() {
  * Can also modify the parameters tw (tail width) and f (fraction of arrow taken
  * up by head).
  */
-function drawArrow(x,y,l,dir){
-    ctx.save();
+function drawArrow(x,y,l,dir) {
+  ctx.save();
 
-    var tw = 8;
-    var f = 0.5;
+  var tw = 8;
+  var f = 0.5;
 
-    ctx.translate(x,y);
+  ctx.translate(x,y);
 
-    if (dir === "left"){
-        ctx.rotate(Math.PI);
-    } else if (dir === "right"){
-        // pass
-    } else if (dir === "up"){
-        ctx.rotate(-Math.PI/2);
-    } else if (dir === "down"){
-        ctx.rotate(Math.PI/2);
-    }
+  if (dir === "left"){
+    ctx.rotate(Math.PI);
+  } else if (dir === "right"){
+    // pass
+  } else if (dir === "up"){
+    ctx.rotate(-Math.PI/2);
+  } else if (dir === "down"){
+    ctx.rotate(Math.PI/2);
+  }
 
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.lineTo(0, -tw/2);
-    ctx.lineTo(l*(1-f), -tw/2);
-    ctx.lineTo(l*(1-f), -tw);
-    ctx.lineTo(l, 0);
-    ctx.lineTo(l*(1-f), tw);
-    ctx.lineTo(l*(1-f), tw/2);
-    ctx.lineTo(0, tw/2);
-    ctx.closePath();
-    ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.lineTo(0, -tw/2);
+  ctx.lineTo(l*(1-f), -tw/2);
+  ctx.lineTo(l*(1-f), -tw);
+  ctx.lineTo(l, 0);
+  ctx.lineTo(l*(1-f), tw);
+  ctx.lineTo(l*(1-f), tw/2);
+  ctx.lineTo(0, tw/2);
+  ctx.closePath();
+  ctx.fill();
 
-    ctx.restore();
+  ctx.restore();
 }
 
 /**
  * Function called to handle case where Show Move button is pressed but no valid
  * moves remain. We show a popup and force user to click New Game.
  */
-function processNoValidMovesRemain(){
-    window.alert("No valid moves remain. Try a new game!");
-    $(".btn").removeClass("btn_enabled").addClass("btn_disabled");
-    $("#btn_new_game").removeClass("btn_disabled").addClass("btn_enabled");
+function processNoValidMovesRemain() {
+  window.alert("No valid moves remain. Try a new game!");
+  $(".btn").removeClass("btn_enabled").addClass("btn_disabled");
+  $("#btn_new_game").removeClass("btn_disabled").addClass("btn_enabled");
 }
 
 /**
  *
  */
-function processShowMove(evt){
-    clearCanvas();
+function processShowMove(evt) {
+  clearCanvas();
 
-    var move = rules.getRandomValidMove();
-    if (!move){
-        processNoValidMovesRemain();
-    } else {
-        var w = BOARD_SIZE_PX / board.getSize();
-        var x = move.candy.col * cellWidth + cellWidth/2;
-        var y = move.candy.row * cellWidth + cellWidth/2;
-        var d = move.direction;
-        drawArrow(x,y,w,d);
-    }
+  var move = rules.getRandomValidMove();
+  if (!move){
+    processNoValidMovesRemain();
+  } else {
+    var w = BOARD_SIZE_PX / board.getSize();
+    var x = move.candy.col * w + w/2;
+    var y = move.candy.row * w + w/2;
+    var d = move.direction;
+    drawArrow(x,y,w,d);
+  }
 }
 
 /**
  * Clear the entire canvas, ensuring that prior modifications to the
  * transformation matrix do not mess up.
  */
-function clearCanvas(){
-    ctx.save();
-    ctx.setTransform(1,0,0,1,0,0);
-    var canvas = document.getElementById("canvas");
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-    ctx.restore();
+function clearCanvas() {
+  ctx.save();
+  ctx.setTransform(1,0,0,1,0,0);
+  var canvas = document.getElementById("canvas");
+  ctx.clearRect(0,0,canvas.width, canvas.height);
+  ctx.restore();
 }
 
 /**
  *
  */
 function gameTableClickHandler(evt){
-    var id = evt.currentTarget.id;
-    $( "#move_input_text" ).val(id);
+  var id = evt.currentTarget.id;
+  $( "#move_input_text" ).val(id);
 
-    // Handle a fake keyup event to the move input text box to avoid redoing the
-    // logic.
-    processInputKeyup();
+  // Handle a fake keyup event to the move input text box to avoid redoing the
+  // logic.
+  processInputKeyup();
 }
 
 /** 
-  * We get a click event on our movement arrow buttons. 
-  * - do some validation that the button is not disabled and the input text is a
-  *   valid cell
-  * - check that the desired move is allowed by the rules
-  * - flip the candies in question
-  * - modify input controls to force a crush
-  */
+ * We get a click event on our movement arrow buttons. 
+ * - do some validation that the button is not disabled and the input text is a
+ *   valid cell
+ * - check that the desired move is allowed by the rules
+ * - flip the candies in question
+ * - modify input controls to force a crush
+ */
 function processMoveClick(direction) {
   if ( ! $( "#" + "btn_move_" + direction).hasClass("btn_disabled")) {
     var input_text = $( "#move_input_text" ).val();
@@ -228,7 +231,7 @@ function processMoveClick(direction) {
  * a valid cell is entered with an associated valid move. If so, we enable the
  * appropriate buttons.
  */
-function processInputKeyup(){
+function processInputKeyup() {
   var input_text = $( "#move_input_text" ).val();
   if (isValidCell(input_text)){
     var candy = cellIdToCandy(input_text);
@@ -247,7 +250,7 @@ function processInputKeyup(){
  * Disable/enable buttons during/for the process/completion of computing and drawing the crushes
  * on the board.
  */
-function setCrushing(bool){
+function setCrushing(bool) {
   if (bool) {
     disableButton("btn_crush_once");
     $( "#" + "move_input_text" ).val("");
@@ -262,7 +265,7 @@ function setCrushing(bool){
  * A crush is available on the board. Disable everything except the crush
  * button, which we also put in focus.
  */
-function mustCrush(bool){
+function mustCrush(bool) {
   if (bool) {
     // Enable and focus crush button
     enableButton("btn_crush_once");
@@ -282,7 +285,7 @@ function mustCrush(bool){
 /**
  * At least one crush is available.
  */
-function canCrush(){
+function canCrush() {
   return rules.getCandyCrushes().length > 0;
 }
 
@@ -294,7 +297,7 @@ function canCrush(){
  * - if more crushes are available, force another crush
  * - else, re-enable controls
  */
-function doCrush(){
+function doCrush() {
   // Can we actually crush?
   if (canCrush()){
     var crushes = rules.getCandyCrushes();
@@ -325,7 +328,7 @@ function createGameTable() {
       // Prepare 
       var cellId = ijToCellId(i,j);
       newRow = newRow + 
-          '<td class="cell" id="{0}"><div class="box"><img src={1}></img></div></td>'.format(cellId,"");
+        '<td class="cell" id="{0}"><div class="box"><img src={1}></img></div></td>'.format(cellId,"");
     }
     newRow = newRow + "</tr>";
     $( "#game_table > tbody" ).append(newRow);
@@ -343,8 +346,7 @@ function createGameTable() {
  * Final initialization entry point: the Javascript code inside this block
  * runs at the end of start-up when the page has finished loading.
  */
-$(document).ready(function()
-{
+$(document).ready(function() {
   // Create game table
   createGameTable();
 
@@ -359,60 +361,97 @@ $(document).ready(function()
 // Event handlers
 
 // add a candy to the board
-$(board).on("add", function(evt, info)
-{
+$(board).on("add", function(evt, info) {
   // Change the colors of the cell
   var row = info.toRow;
   var col = info.toCol;
   var color = info.candy.color;
   var cellId = ijToCellId(row, col);
-  setCellToColor(cellId, color);
+
+  console.log("processing add {0}".format(cellId));
+  $("#" + cellId + " > div > img").animate(
+    {opacity: 1},
+    0,
+    function(){
+      setCellToColor(cellId, color);
+      console.log("processing add {0}...complete".format(cellId));
+    }
+    );
+
+  // $("#" + cellId + " > div > img").queue(function(){
+  //     console.log("processing add...animating {0}".format(cellId));
+  //     $(this).animate(
+  //       {
+  //         opacity: "1"
+  //       },
+  //       0
+  //     );
+  //     $(this).dequeue();
+  // });
 });
 
 // move a candy on the board
-$(board).on("move", function(evt, info)
-{
+$(board).on("move", function(evt, info) {
   // Change the colors of the cell
   var row = info.toRow;
   var col = info.toCol;
   var color = info.candy.color;
   var cellId = ijToCellId(row, col);
-  setCellToColor(cellId, color);
+  $("#" + cellId + " > div > img").animate(
+    {opacity: 1},
+    0,
+    function(){
+      setCellToColor(cellId, color);
+    }
+    );
 });
 
 // remove a candy from the board
-$(board).on("remove", function(e, info)
-{
+$(board).on("remove", function(evt, info) {
   // Change the colors of the cell
   var row = info.fromRow;
   var col = info.fromCol;
-  var color = "empty";
   var cellId = ijToCellId(row, col);
-  setCellToColor(cellId, color);
+
+  console.log("processing remove {0}".format(cellId));
+  $("#" + cellId + " > div > img").animate(
+    { opacity: [0, "swing"] },
+    1000,
+    function(){console.log("processing remove {0}...complete".format(cellId))}
+    );
+
+  // $("#" + cellId + " > div > img").queue(function(){
+  //     console.log("processing remove...animating {0}".format(cellId));
+  //     $(this).animate(
+  //       {
+  //         opacity: 0
+  //       },
+  //       5000
+  //       , function(){ $(this).dequeue(); }
+  //     );
+  // });
+
 });
 
 // update score
-$(board).on("scoreUpdate", function(evt, info)
-{
-    var new_score = info.score;
-    $( "#span_score" ).text(new_score)
-    if (info.candy){
-        var last_crush_color = info.candy.color;
-        $( "#span_score_wrapper" ).css({"background-color": last_crush_color});
-    } else {
-        $( "#span_score_wrapper" ).css({"background-color": "#999999"});
-    }
+$(board).on("scoreUpdate", function(evt, info) {
+  var new_score = info.score;
+  $( "#span_score" ).text(new_score)
+  if (info.candy){
+    var last_crush_color = info.candy.color;
+    $( "#span_score_wrapper" ).css({"background-color": last_crush_color});
+  } else {
+    $( "#span_score_wrapper" ).css({"background-color": "#999999"});
+  }
 });
 
 // ----------------------------------------------------------------------------
 // Button Events
 
-$(document).on("click", "#btn_crush_once", function(evt)
-{
+$(document).on("click", "#btn_crush_once", function(evt) {
   doCrush();
 });
-$(document).on("click", "#btn_new_game", function(evt)
-{
+$(document).on("click", "#btn_new_game", function(evt) {
   board.clear();
   board.resetScore();
   rules.prepareNewGame();
@@ -424,20 +463,16 @@ $(document).on("click", "#btn_new_game", function(evt)
 $(document).on("click", "#btn_show_move", function(evt){
   processShowMove(evt);
 });
-$(document).on("click", "#btn_move_up", function(evt)
-{
+$(document).on("click", "#btn_move_up", function(evt) {
   processMoveClick("up");
 });
-$(document).on("click", "#btn_move_left", function(evt)
-{
+$(document).on("click", "#btn_move_left", function(evt) {
   processMoveClick("left");
 });
-$(document).on("click", "#btn_move_right", function(evt)
-{
+$(document).on("click", "#btn_move_right", function(evt) {
   processMoveClick("right");
 });
-$(document).on("click", "#btn_move_down", function(evt)
-{
+$(document).on("click", "#btn_move_down", function(evt) {
   processMoveClick("down");
 });
 $(document).on("keyup", function(evt) {
@@ -454,7 +489,7 @@ $(document).on("keyup", function(evt) {
 
 // Clear canvas once any button *but* "Show Move" is pressed.
 $(document).on("click", ".btn", function(evt){
-    if (evt.target.id !== "btn_show_move"){
-        clearCanvas();
-    }
+  if (evt.target.id !== "btn_show_move"){
+    clearCanvas();
+  }
 });
