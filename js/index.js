@@ -14,8 +14,8 @@ const ARROW_KEY_CODES         = [37, 38, 39, 40];
 const CELL_COLORS             = ["yellow", "red", "purple", "blue", "orange", "green"];
 const ENTER_KEY               = 13;
 const CHAR_CODE_A             = 97;
-const MOVE_ANIMATION_DURATION = 160;
-const REMV_ANIMATION_DURATION = 500;
+const MOVE_ANIMATION_DURATION = 1600;
+const REMV_ANIMATION_DURATION = 5000;
 
 // data model at global scope for easier debugging
 var board;
@@ -29,7 +29,7 @@ if (url_var_size >= MIN_BOARD_SIZE && url_var_size <= MAX_BOARD_SIZE) {
   board = new Board(DEFAULT_BOARD_SIZE);
 }
 
-var preparing_new_game = true;
+var preparing_new_game;
 
 // load a rule
 rules = new Rules(board);
@@ -311,14 +311,20 @@ function canCrush() {
 function doCrush() {
   // Can we actually crush?
   if (canCrush()){
+    console.log("crush beginning");
     var crushes = rules.getCandyCrushes();
-    rules.removeCrushes(crushes);
+    $("#game_table").queue(function(){
+      rules.removeCrushes(crushes);
+      $(this).dequeue();
+    });
 
-    // Dumb asynchronous stuff
-    // Do this with promises? http://stackoverflow.com/a/18625565/2514228
+
     setCrushing(true);
     setTimeout(function() {
-      rules.moveCandiesDown();
+      $("#game_table").queue(function(){
+        rules.moveCandiesDown();
+        $(this).dequeue();
+      });
       if (canCrush()){
         doCrush();
       } else {
@@ -389,6 +395,8 @@ $(board).on("add", function(evt, info) {
   var col     = info.toCol;
   var color   = info.candy.color;
 
+  console.log("adding {0}".format(ijToCellId(row, col)));
+
   if (!preparing_new_game){
     animateMove(fromRow, fromCol, row, col, color);
   } else {
@@ -410,6 +418,8 @@ $(board).on("move", function(evt, info) {
   var col     = info.toCol;
   var color   = info.candy.color;
 
+  console.log("moving {0}".format(ijToCellId(row, col)));
+
   animateMove(fromRow, fromCol, row, col, color);
 });
 
@@ -419,6 +429,8 @@ $(board).on("remove", function(evt, info) {
   var row = info.fromRow;
   var col = info.fromCol;
   var cellId = ijToCellId(row, col);
+
+  console.log("removing {0}".format(cellId));
 
   if (!preparing_new_game){
     $( cellSelectorString(cellId) ).animate(
