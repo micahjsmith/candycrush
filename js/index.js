@@ -30,6 +30,8 @@ if (url_var_size >= MIN_BOARD_SIZE && url_var_size <= MAX_BOARD_SIZE) {
 }
 
 var preparing_new_game;
+var number_removing = 0;
+var number_moving = 0;
 
 // load a rule
 rules = new Rules(board);
@@ -223,7 +225,15 @@ function processMoveClick(direction) {
       if (rules.isMoveTypeValid(candy, direction)){
         var toCandy = board.getCandyInDirection(candy, direction);
         board.flipCandies(candy, toCandy);
-        doCrush();
+
+        setTimeout(function(){},10);
+        poll(function(){
+          return number_moving > 0;
+        }, 10000, 20).then(function() {
+          doCrush();
+        }).catch(function() {
+          console.log("Timed out waiting to flip candies.");
+        });
       }
     }
   }
@@ -268,6 +278,8 @@ function setCrushing(bool) {
 }
 
 function animateMove(fromRow, fromCol, row, col, color){
+  number_moving++;
+
   var cellId = ijToCellId(row, col);
 
   var cw = BOARD_SIZE_PX / board.getSize();
@@ -289,7 +301,9 @@ function animateMove(fromRow, fromCol, row, col, color){
       },
       MOVE_ANIMATION_DURATION,
       "swing",
-      function(){ /* pass */ }
+      function(){ 
+        number_moving--;
+      }
     );
 }
 
@@ -313,24 +327,31 @@ function doCrush() {
   if (canCrush()){
     console.log("crush beginning");
     var crushes = rules.getCandyCrushes();
-    $("#game_table").queue(function(){
-      rules.removeCrushes(crushes);
-      $(this).dequeue();
+    rules.removeCrushes(crushes);
+
+    // Poll until crushes are done removing.
+    poll(function() {
+      return number_removing > 0;
+    }, 10000, 20).then(function() {
+      setCrushing(true);
+      rules.moveCandiesDown();
+    }).catch(function() {
+      console.log("Timed out waiting for removing candies.");
     });
 
 
-    setCrushing(true);
-    setTimeout(function() {
-      $("#game_table").queue(function(){
-        rules.moveCandiesDown();
-        $(this).dequeue();
-      });
+    poll(function() {
+      return number_moving > 0;
+    }, 10000, 30).then(function(){
       if (canCrush()){
         doCrush();
       } else {
         setCrushing(false);
       }
-    }, TIMEOUT_REPOPULATE);
+    }).catch(function() {
+      console.log("Timed out waiting for moving candies.");
+    });
+
   }
 }
 
@@ -395,7 +416,7 @@ $(board).on("add", function(evt, info) {
   var col     = info.toCol;
   var color   = info.candy.color;
 
-  console.log("adding {0}".format(ijToCellId(row, col)));
+  //console.log("adding {0}".format(ijToCellId(row, col)));
 
   if (!preparing_new_game){
     animateMove(fromRow, fromCol, row, col, color);
@@ -418,24 +439,29 @@ $(board).on("move", function(evt, info) {
   var col     = info.toCol;
   var color   = info.candy.color;
 
-  console.log("moving {0}".format(ijToCellId(row, col)));
+  //console.log("moving {0}".format(ijToCellId(row, col)));
 
   animateMove(fromRow, fromCol, row, col, color);
 });
 
 // remove a candy from the board
 $(board).on("remove", function(evt, info) {
+  number_removing++;
+
   // Change the colors of the cell
   var row = info.fromRow;
   var col = info.fromCol;
   var cellId = ijToCellId(row, col);
 
-  console.log("removing {0}".format(cellId));
+  //console.log("removing {0}".format(cellId));
 
   if (!preparing_new_game){
     $( cellSelectorString(cellId) ).animate(
       { opacity: [0, "swing"] },
-      REMV_ANIMATION_DURATION 
+      REMV_ANIMATION_DURATION,
+      function() {
+        number_removing--;
+      }
     );
   } else {
     $( cellSelectorString(cellId) ).queue(function(){
@@ -488,8 +514,6 @@ $(document).on("click", "#btn_move_down", function(evt) {
 $(document).on("keyup", function(evt) {
   if ($.inArray(evt.which, ARROW_KEY_CODES) != -1) {
     processMoveClick(arrowToDirection(evt.which));
-  } else if (evt.which == ENTER_KEY) {
-    doCrush();
   } else if (evt.target.id == "move_input_text"){
     // Is this coming directly from the move_input_text?
     // Delegate to move-specific handler, to check contents of text area.
