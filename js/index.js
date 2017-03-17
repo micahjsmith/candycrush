@@ -189,6 +189,10 @@ function setCrushing(bool) {
   }
 }
 
+/**
+ * Animate a candy to move from one cell to another. Also handles the case of
+ * an add, in which case the origin cell is set to above the table.
+ */
 function animateMove(fromRow, fromCol, row, col, color){
   number_moving++;
 
@@ -229,9 +233,10 @@ function canCrush() {
 /**
  * Process crush
  * - remove crushes
- * - disable controls
+ * - poll until complete
  * - move candies down
- * - if more crushes are available, force another crush
+ * - poll until complete
+ * - if more crushes are available, crush again
  * - else, re-enable controls
  */
 function doCrush() {
@@ -250,18 +255,18 @@ function doCrush() {
       setTimeout(function(){}, 10);
       poll(function() {
         return number_moving === 0;
-      }, 10000, 30).then(function(){
+      }, 10000, 20).then(function(){
         if (canCrush()){
           doCrush();
         } else {
           setCrushing(false);
         }
       }).catch(function() {
-        console.log("Timed out waiting for moving candies.");
+        //console.log("Timed out waiting for moving candies.");
       });
 
     }).catch(function() {
-      console.log("Timed out waiting for removing candies.");
+      //console.log("Timed out waiting for removing candies.");
     });
 
 
@@ -283,7 +288,7 @@ function processNoValidMovesRemain() {
 }
 
 /**
- *
+ * Get a move, draw an arrow.
  */
 function processShowMove(evt) {
   clearCanvas();
@@ -301,7 +306,7 @@ function processShowMove(evt) {
 }
 
 /**
- *
+ * Get cell that was clicked and populated move input text box.
  */
 function gameTableClickHandler(evt){
   var id = evt.currentTarget.id;
@@ -314,11 +319,10 @@ function gameTableClickHandler(evt){
 
 /** 
  * We get a click event on our movement arrow buttons. 
- * - do some validation that the button is not disabled and the input text is a
- *   valid cell
+ * - do some validation on desired move
  * - check that the desired move is allowed by the rules
  * - flip the candies in question
- * - modify input controls to force a crush
+ * - poll until candies are flipped, then do crush
  */
 function processMoveClick(direction) {
   if ( ! $( "#" + "btn_move_" + direction).hasClass("btn_disabled")) {
@@ -337,7 +341,7 @@ function processMoveClick(direction) {
         }, 10000, 20).then(function() {
           doCrush();
         }).catch(function() {
-          console.log("Timed out waiting for flipping candies.");
+          //console.log("Timed out waiting for flipping candies.");
         });
       }
     }
@@ -498,7 +502,7 @@ $(board).on("scoreUpdate", function(evt, info) {
       }
     }, SCORE_UPDATE_TIMEOUT);
   }).catch(function() {
-    console.log("Timed out waiting for removing candies.");
+    //console.log("Timed out waiting for removing candies.");
   });
 });
 
