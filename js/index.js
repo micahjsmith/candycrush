@@ -14,8 +14,8 @@ const ARROW_KEY_CODES         = [37, 38, 39, 40];
 const CELL_COLORS             = ["yellow", "red", "purple", "blue", "orange", "green"];
 const ENTER_KEY               = 13;
 const CHAR_CODE_A             = 97;
-const MOVE_ANIMATION_DURATION = 1600;
-const REMV_ANIMATION_DURATION = 5000;
+const MOVE_ANIMATION_DURATION = 400;
+const REMV_ANIMATION_DURATION = 400;
 
 // data model at global scope for easier debugging
 var board;
@@ -29,6 +29,7 @@ if (url_var_size >= MIN_BOARD_SIZE && url_var_size <= MAX_BOARD_SIZE) {
   board = new Board(DEFAULT_BOARD_SIZE);
 }
 
+// state variables to let us keep track of animations
 var preparing_new_game;
 var number_removing = 0;
 var number_moving = 0;
@@ -92,6 +93,7 @@ function setCellToColor(cellId, color) {
 
 // ----------------------------------------------------------------------------
 // Enable/disable input controls
+
 function disableButton(id) {
   $( "#" + id ).removeClass("btn_enabled").addClass("btn_disabled");
 }
@@ -115,6 +117,9 @@ function disableMoveInput() {
 function enableMoveInput() {
   $( "#move_input_text" ).prop("disabled", false);
 }
+
+// ----------------------------------------------------------------------------
+// Animation
 
 // ----------------------------------------------------------------------------
 // Input logic
@@ -226,10 +231,12 @@ function processMoveClick(direction) {
         var toCandy = board.getCandyInDirection(candy, direction);
         board.flipCandies(candy, toCandy);
 
+        console.log("beginning poll for flipCandies");
         setTimeout(function(){},10);
         poll(function(){
-          return number_moving > 0;
+          return number_moving === 0;
         }, 10000, 20).then(function() {
+          console.log("done polling for flipCandies");
           doCrush();
         }).catch(function() {
           console.log("Timed out waiting to flip candies.");
@@ -330,27 +337,34 @@ function doCrush() {
     rules.removeCrushes(crushes);
 
     // Poll until crushes are done removing.
+    console.log("beginning to poll for removing candies");
+    setTimeout(function(){}, 10);
     poll(function() {
-      return number_removing > 0;
+      return number_removing === 0;
     }, 10000, 20).then(function() {
+      console.log("done polling for removing candies");
       setCrushing(true);
       rules.moveCandiesDown();
+
+      console.log("beginning to poll for moving candies");
+      setTimeout(function(){}, 10);
+      poll(function() {
+        return number_moving === 0;
+      }, 10000, 30).then(function(){
+        if (canCrush()){
+          console.log("done polling for moving candies");
+          doCrush();
+        } else {
+          setCrushing(false);
+        }
+      }).catch(function() {
+        console.log("Timed out waiting for moving candies.");
+      });
+
     }).catch(function() {
       console.log("Timed out waiting for removing candies.");
     });
 
-
-    poll(function() {
-      return number_moving > 0;
-    }, 10000, 30).then(function(){
-      if (canCrush()){
-        doCrush();
-      } else {
-        setCrushing(false);
-      }
-    }).catch(function() {
-      console.log("Timed out waiting for moving candies.");
-    });
 
   }
 }
@@ -446,7 +460,10 @@ $(board).on("move", function(evt, info) {
 
 // remove a candy from the board
 $(board).on("remove", function(evt, info) {
-  number_removing++;
+  if (!preparing_new_game){
+    number_removing++;
+    console.log("removing++ ({0})".format(number_removing));
+  }
 
   // Change the colors of the cell
   var row = info.fromRow;
@@ -461,6 +478,7 @@ $(board).on("remove", function(evt, info) {
       REMV_ANIMATION_DURATION,
       function() {
         number_removing--;
+        console.log("removing-- ({0})".format(number_removing));
       }
     );
   } else {
