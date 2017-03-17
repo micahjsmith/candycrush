@@ -8,7 +8,6 @@ const BOARD_SIZE_PX           = 320;
 const MIN_BOARD_SIZE          = 3;
 const DEFAULT_BOARD_SIZE      = 8;
 const MAX_BOARD_SIZE          = 20;
-const TIMEOUT_REPOPULATE      = 500;
 const DIRECTIONS              = ["left","up","right","down"];
 const ARROW_KEY_CODES         = [37, 38, 39, 40];
 const CELL_COLORS             = ["yellow", "red", "purple", "blue", "orange", "green"];
@@ -16,6 +15,7 @@ const ENTER_KEY               = 13;
 const CHAR_CODE_A             = 97;
 const MOVE_ANIMATION_DURATION = 400;
 const REMV_ANIMATION_DURATION = 400;
+const SCORE_UPDATE_TIMEOUT    = 100;
 
 // data model at global scope for easier debugging
 var board;
@@ -478,19 +478,28 @@ $(board).on("remove", function(evt, info) {
 
 // update score
 $(board).on("scoreUpdate", function(evt, info) {
-  var new_score = info.score;
-  $( "#span_score" ).text(new_score)
-  if (info.candy){
-    var last_crush_color = info.candy.color;
-    $( "#span_score_wrapper" ).css({"background-color": last_crush_color});
-    if (last_crush_color === "yellow"){
-      $( "span_score" ).css({"color":"black"});
-    } else {
-      $( "span_score" ).css({"color":"white"});
-    }
-  } else {
-    $( "#span_score_wrapper" ).css({"background-color": "#999999"});
-  }
+  // Poll for removing complete
+  poll(function() {
+    return number_removing === 0;
+  }, 10000, 20).then(function() {
+    setTimeout(function(){
+      var new_score = info.score;
+      $( "#span_score" ).text(new_score)
+      if (info.candy){
+        var last_crush_color = info.candy.color;
+        $( "#span_score_wrapper" ).css({"background-color": last_crush_color});
+        if (last_crush_color === "yellow"){
+          $( "span_score" ).css({"color":"black"});
+        } else {
+          $( "span_score" ).css({"color":"white"});
+        }
+      } else {
+        $( "#span_score_wrapper" ).css({"background-color": "#999999"});
+      }
+    }, SCORE_UPDATE_TIMEOUT);
+  }).catch(function() {
+    console.log("Timed out waiting for removing candies.");
+  });
 });
 
 // ----------------------------------------------------------------------------
