@@ -121,9 +121,6 @@ function enableMoveInput() {
 // ----------------------------------------------------------------------------
 // Animation
 
-// ----------------------------------------------------------------------------
-// Input logic
-
 /**
  * Draw arrow from point (x,y) with length l in direction dir.
  * Can also modify the parameters tw (tail width) and f (fraction of arrow taken
@@ -163,34 +160,6 @@ function drawArrow(x,y,l,dir) {
 }
 
 /**
- * Function called to handle case where Show Move button is pressed but no valid
- * moves remain. We show a popup and force user to click New Game.
- */
-function processNoValidMovesRemain() {
-  window.alert("No valid moves remain. Try a new game!");
-  $(".btn").removeClass("btn_enabled").addClass("btn_disabled");
-  $("#btn_new_game").removeClass("btn_disabled").addClass("btn_enabled");
-}
-
-/**
- *
- */
-function processShowMove(evt) {
-  clearCanvas();
-
-  var move = rules.getRandomValidMove();
-  if (!move){
-    processNoValidMovesRemain();
-  } else {
-    var w = BOARD_SIZE_PX / board.getSize();
-    var x = move.candy.col * w + w/2;
-    var y = move.candy.row * w + w/2;
-    var d = move.direction;
-    drawArrow(x,y,w,d);
-  }
-}
-
-/**
  * Clear the entire canvas, ensuring that prior modifications to the
  * transformation matrix do not mess up.
  */
@@ -200,70 +169,6 @@ function clearCanvas() {
   var canvas = document.getElementById("canvas");
   ctx.clearRect(0,0,canvas.width, canvas.height);
   ctx.restore();
-}
-
-/**
- *
- */
-function gameTableClickHandler(evt){
-  var id = evt.currentTarget.id;
-  $( "#move_input_text" ).val(id);
-
-  // Handle a fake keyup event to the move input text box to avoid redoing the
-  // logic.
-  processInputKeyup();
-}
-
-/** 
- * We get a click event on our movement arrow buttons. 
- * - do some validation that the button is not disabled and the input text is a
- *   valid cell
- * - check that the desired move is allowed by the rules
- * - flip the candies in question
- * - modify input controls to force a crush
- */
-function processMoveClick(direction) {
-  if ( ! $( "#" + "btn_move_" + direction).hasClass("btn_disabled")) {
-    var input_text = $( "#move_input_text" ).val();
-    if (isValidCell(input_text)){
-      var candy = cellIdToCandy(input_text);
-      if (rules.isMoveTypeValid(candy, direction)){
-        var toCandy = board.getCandyInDirection(candy, direction);
-        board.flipCandies(candy, toCandy);
-
-        console.log("beginning poll for flipCandies");
-        setTimeout(function(){},10);
-        poll(function(){
-          return number_moving === 0;
-        }, 10000, 20).then(function() {
-          console.log("done polling for flipCandies");
-          doCrush();
-        }).catch(function() {
-          console.log("Timed out waiting to flip candies.");
-        });
-      }
-    }
-  }
-}
-
-/**
- * A keyup event has originated from the input text area. Check that a
- * a valid cell is entered with an associated valid move. If so, we enable the
- * appropriate buttons.
- */
-function processInputKeyup() {
-  var input_text = $( "#move_input_text" ).val();
-  if (isValidCell(input_text)){
-    var candy = cellIdToCandy(input_text);
-    DIRECTIONS.forEach(function(entry){
-      if (rules.isMoveTypeValid(candy, entry)){
-        enableMoveButton(entry);
-        return;
-      } else {
-        disableMoveButton(entry);
-      }
-    });
-  }
 }
 
 /**
@@ -332,27 +237,21 @@ function canCrush() {
 function doCrush() {
   // Can we actually crush?
   if (canCrush()){
-    console.log("crush beginning");
     var crushes = rules.getCandyCrushes();
     rules.removeCrushes(crushes);
 
     // Poll until crushes are done removing.
-    console.log("beginning to poll for removing candies");
     setTimeout(function(){}, 10);
     poll(function() {
       return number_removing === 0;
     }, 10000, 20).then(function() {
-      console.log("done polling for removing candies");
-      setCrushing(true);
       rules.moveCandiesDown();
 
-      console.log("beginning to poll for moving candies");
       setTimeout(function(){}, 10);
       poll(function() {
         return number_moving === 0;
       }, 10000, 30).then(function(){
         if (canCrush()){
-          console.log("done polling for moving candies");
           doCrush();
         } else {
           setCrushing(false);
@@ -366,6 +265,102 @@ function doCrush() {
     });
 
 
+  }
+}
+
+
+// ----------------------------------------------------------------------------
+// Input logic
+
+/**
+ * Function called to handle case where Show Move button is pressed but no valid
+ * moves remain. We show a popup and force user to click New Game.
+ */
+function processNoValidMovesRemain() {
+  window.alert("No valid moves remain. Try a new game!");
+  $(".btn").removeClass("btn_enabled").addClass("btn_disabled");
+  $("#btn_new_game").removeClass("btn_disabled").addClass("btn_enabled");
+}
+
+/**
+ *
+ */
+function processShowMove(evt) {
+  clearCanvas();
+
+  var move = rules.getRandomValidMove();
+  if (!move){
+    processNoValidMovesRemain();
+  } else {
+    var w = BOARD_SIZE_PX / board.getSize();
+    var x = move.candy.col * w + w/2;
+    var y = move.candy.row * w + w/2;
+    var d = move.direction;
+    drawArrow(x,y,w,d);
+  }
+}
+
+/**
+ *
+ */
+function gameTableClickHandler(evt){
+  var id = evt.currentTarget.id;
+  $( "#move_input_text" ).val(id);
+
+  // Handle a fake keyup event to the move input text box to avoid redoing the
+  // logic.
+  processInputKeyup();
+}
+
+/** 
+ * We get a click event on our movement arrow buttons. 
+ * - do some validation that the button is not disabled and the input text is a
+ *   valid cell
+ * - check that the desired move is allowed by the rules
+ * - flip the candies in question
+ * - modify input controls to force a crush
+ */
+function processMoveClick(direction) {
+  if ( ! $( "#" + "btn_move_" + direction).hasClass("btn_disabled")) {
+    var input_text = $( "#move_input_text" ).val();
+    if (isValidCell(input_text)){
+      var candy = cellIdToCandy(input_text);
+      if (rules.isMoveTypeValid(candy, direction)){
+        var toCandy = board.getCandyInDirection(candy, direction);
+
+        setCrushing(true);
+        board.flipCandies(candy, toCandy);
+
+        setTimeout(function(){},10);
+        poll(function(){
+          return number_moving === 0;
+        }, 10000, 20).then(function() {
+          doCrush();
+        }).catch(function() {
+          console.log("Timed out waiting for flipping candies.");
+        });
+      }
+    }
+  }
+}
+
+/**
+ * A keyup event has originated from the input text area. Check that a
+ * a valid cell is entered with an associated valid move. If so, we enable the
+ * appropriate buttons.
+ */
+function processInputKeyup() {
+  var input_text = $( "#move_input_text" ).val();
+  if (isValidCell(input_text)){
+    var candy = cellIdToCandy(input_text);
+    DIRECTIONS.forEach(function(entry){
+      if (rules.isMoveTypeValid(candy, entry)){
+        enableMoveButton(entry);
+        return;
+      } else {
+        disableMoveButton(entry);
+      }
+    });
   }
 }
 
@@ -430,8 +425,6 @@ $(board).on("add", function(evt, info) {
   var col     = info.toCol;
   var color   = info.candy.color;
 
-  //console.log("adding {0}".format(ijToCellId(row, col)));
-
   if (!preparing_new_game){
     animateMove(fromRow, fromCol, row, col, color);
   } else {
@@ -453,8 +446,6 @@ $(board).on("move", function(evt, info) {
   var col     = info.toCol;
   var color   = info.candy.color;
 
-  //console.log("moving {0}".format(ijToCellId(row, col)));
-
   animateMove(fromRow, fromCol, row, col, color);
 });
 
@@ -462,7 +453,6 @@ $(board).on("move", function(evt, info) {
 $(board).on("remove", function(evt, info) {
   if (!preparing_new_game){
     number_removing++;
-    console.log("removing++ ({0})".format(number_removing));
   }
 
   // Change the colors of the cell
@@ -470,15 +460,12 @@ $(board).on("remove", function(evt, info) {
   var col = info.fromCol;
   var cellId = ijToCellId(row, col);
 
-  //console.log("removing {0}".format(cellId));
-
   if (!preparing_new_game){
     $( cellSelectorString(cellId) ).animate(
       { opacity: [0, "swing"] },
       REMV_ANIMATION_DURATION,
       function() {
         number_removing--;
-        console.log("removing-- ({0})".format(number_removing));
       }
     );
   } else {
@@ -496,6 +483,11 @@ $(board).on("scoreUpdate", function(evt, info) {
   if (info.candy){
     var last_crush_color = info.candy.color;
     $( "#span_score_wrapper" ).css({"background-color": last_crush_color});
+    if (last_crush_color === "yellow"){
+      $( "span_score" ).css({"color":"black"});
+    } else {
+      $( "span_score" ).css({"color":"white"});
+    }
   } else {
     $( "#span_score_wrapper" ).css({"background-color": "#999999"});
   }
@@ -531,6 +523,7 @@ $(document).on("click", "#btn_move_down", function(evt) {
 });
 $(document).on("keyup", function(evt) {
   if ($.inArray(evt.which, ARROW_KEY_CODES) != -1) {
+    clearCanvas();
     processMoveClick(arrowToDirection(evt.which));
   } else if (evt.target.id == "move_input_text"){
     // Is this coming directly from the move_input_text?
