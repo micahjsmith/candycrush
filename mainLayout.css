@@ -59,6 +59,7 @@ td > div > div > img {
 }
 
 #canvas {
+  z-index: 5000;
   position: absolute;
   width: 320px;
   height: 320px;

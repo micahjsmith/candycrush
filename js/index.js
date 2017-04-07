@@ -17,6 +17,8 @@ const MOVE_ANIMATION_DURATION = 400;
 const REMV_ANIMATION_DURATION = 400;
 const SCORE_UPDATE_TIMEOUT    = 100;
 const Z_INDEX_DEFAULT         = 30;
+const CANDY_IMG_SRC_DIR       = "graphics/";
+const CANDY_IMG_SRC_SUFFIX    = "-candy.png";
 
 // data model at global scope for easier debugging
 var board;
@@ -33,14 +35,23 @@ if (url_var_size >= MIN_BOARD_SIZE && url_var_size <= MAX_BOARD_SIZE) {
 // state variables to let us keep track of animations
 var preparing_new_game;
 var number_removing = 0;
-var number_moving = 0;
-var dragging = null;
+var number_moving   = 0;
+var dragging        = null;
 
 // load a rule
 rules = new Rules(board);
 
 // ----------------------------------------------------------------------------
 // Utility methods
+
+//  - i is an integer identifying the row index (0-based)
+//  - j is an integer identifying the column index (0-based)
+//  - cellId is a string where the first character is a mapping from the row
+//    index to the alphabet (i.e., 0 => 'a') and subsequent characters is a
+//    mapping from the column index (0-based) to the column index (1-based).
+//    - ex: (0,0) => "a1"
+//    - ex: (3,4) => "d5"
+
 function ijToCellId(i, j) {
   return String.fromCharCode(i + CHAR_CODE_A) + (j+1);
 }
@@ -55,6 +66,37 @@ function cellIdToIj(cellId) {
 function cellIdToCandy(cellId) {
   var loc = cellIdToIj(cellId);
   return board.getCandyAt(loc[0], loc[1]);
+}
+
+function cellSizePixels() {
+  return BOARD_SIZE_PX / board.getSize();
+}
+
+function positionToCellId(x, y) {
+  // call (x0, y0) and (x1, y1) the top left and bottom right page positions,
+  // respectively
+  var pos0 = $("#game_table").offset();
+  var x0 = pos0.left,
+      y0 = pos0.top;
+  var x1 = x0 + BOARD_SIZE_PX,
+      y1 = y0 + BOARD_SIZE_PX;
+
+  // confirm position is inside table.
+  if ( !( (x0 <= x) && (x <=x1) && (y0 <= y) && (y <= y1) ) ){
+    return null;
+  }
+
+  // get i and j
+  var dx = x - x0,
+      dy = y - y0;
+  var cellSize = cellSizePixels();
+  var i = Math.floor(dy / cellSize);
+  var j = Math.floor(dx / cellSize);
+
+  // return cellId
+  var cellId = ijToCellId(i, j);
+
+  return cellId;
 }
 
 /**
@@ -86,11 +128,26 @@ function setCellToColor(cellId, color) {
     //pass
   } else {
     $( cellSelectorString(cellId) ).attr({
-      "src"    : "graphics/{0}-candy.png".format(color),
+      "src"    : CANDY_IMG_SRC_DIR + color + CANDY_IMG_SRC_SUFFIX,
       "height" : "100%",
       "width"  : "100%"
     });
   }
+}
+
+function candyImageLocationToColor(src){
+  var color = src.substring(CANDY_IMG_SRC_DIR.length,
+                            src.length - CANDY_IMG_SRC_SUFFIX.length);
+  return color;
+}
+
+function getCellColorFromImg(img) {
+  var src = $(img).attr("src");
+  return candyImageLocationToColor(src);
+}
+
+function getCellColor(cellId) {
+  return getCellColorFromImg( $( cellSelectorString(cellId) ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -564,19 +621,8 @@ $(document).on("mousedown", "img", function(evt) {
   var dy = evt.pageY - cellPos.top;
   dragging = { target: evt.target, dx: dx, dy: dy };
   $(dragging.target).css("z-index", Z_INDEX_DEFAULT*2);
-  console.log("beginning drag");
-
-  // // prepare to drag the candy
-  // //   - record the original position of the candy? of the mouse?
-  // var cellPos = $(evt.target).offset();
-  // $(evt.target).data("x", cellPos.left);
-  // $(evt.target).data("y", cellPos.top);
-
-  // //   - set the z-index of the element so that it drags on top of everything else
-  // $(evt.target).css({"z-index": 60});
-
-  // // var cell_id = $(evt.target).parent().parent().parent().attr("id");
 });
+
 $(document).on("mousemove", "img", function(evt) {
   evt.preventDefault();
   if (dragging){
@@ -584,41 +630,52 @@ $(document).on("mousemove", "img", function(evt) {
       left : evt.pageX - dragging.dx,
       top  : evt.pageY - dragging.dy
     });
-
-    // // move the candy.
-    // // 1. get the x,y position of the mouse on the screen
-    // var x = evt.screenX;
-    // var y = evt.screenY;
-
-    // // 2. get the position of the original cell
-    // var cellX = $(evt.target).data("x");
-    // var cellY = $(evt.target).data("y");
-    // 
-    // var dy = y - cellY;
-    // var dx = x - cellX;
-
-    // // 3. adjust the top and left css properties, accounting for this offset,
-    // //     to match the position of the mouse
-    // $(evt.target).css({
-    //     top: "{0}px".format(dy),
-    //     left: "{0}px".format(dx)
-    // });
   }
 });
 $(document).on("mouseup", "img", function(evt) {
   evt.preventDefault();
-  $(dragging).css("z-index", Z_INDEX_DEFAULT);
+
+  // determine how to treat the drop of candy "A".
+  var x = evt.pageX,
+      y = evt.pageY;
+  var cellIdB = positionToCellId(x, y);
+  if (cellIdB){
+    // in this case, we drop candy "A" onto candy "B"'s square
+    // set the top and left position of A to B's square
+    // - get color of B
+    // - get color of A
+    // - set color of B to this color
+    // - make A vanish
+    var cellIdA = $(dragging.target).parent().parent().parent().attr("id");
+    var colorA = getCellColor(cellIdA);
+    var colorB = getCellColor(cellIdB);
+    setCellToColor(cellIdB, colorA);
+    $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT*2);
+    $( cellSelectorString(cellIdB) ).css("z-index", Z_INDEX_DEFAULT);
+    
+    // immediately begin the animation of moving B to A's square
+    var locA = cellIdToIj(cellIdA);
+    var locB = cellIdToIj(cellIdB);
+    var fromRow = locB[0],
+        fromCol = locB[1],
+        toRow   = locA[0],
+        toCol   = locA[1],
+        color   = colorB;
+    animateMove(fromRow, fromCol, toRow, toCol, color);
+    $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT);
+
+    // reset canvas, just in case :)
+    clearCanvas();
+
+    // try to crush :)
+
+  } else {
+    // reset top and left position to original
+    $(dragging.target).css({
+      top: "0px",
+      left: "0px"
+    });
+  }
+
   dragging = null;
-  console.log("ending drag");
-  // release the candy ("A").
-  // case 1: the mouse is still within A's original square
-  //   - reset top and left position to original
-  //   - reset z-index
-  // case 2: the mouse is outside of the grid entirely
-  //   - reset top and left position to original
-  //   - reset z-index
-  // case 3: the mouse is within the square of a different candy ("B").
-  //   - immediately begin the animation of moving B to A's square
-  //   - set the top and left position of A to B's square
-  //   - reset z-index
 });
