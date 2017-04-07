@@ -16,6 +16,7 @@ const CHAR_CODE_A             = 97;
 const MOVE_ANIMATION_DURATION = 400;
 const REMV_ANIMATION_DURATION = 400;
 const SCORE_UPDATE_TIMEOUT    = 100;
+const Z_INDEX_DEFAULT         = 30;
 
 // data model at global scope for easier debugging
 var board;
@@ -395,7 +396,7 @@ function createGameTable() {
 }
 
 function cellSelectorString(cellId) {
-  return "#" + cellId + " > div > div > img"
+  return "#" + cellId + " > div > div > img";
 }
 
 
@@ -489,7 +490,7 @@ $(board).on("scoreUpdate", function(evt, info) {
   }, 10000, 20).then(function() {
     setTimeout(function(){
       var new_score = info.score;
-      $( "#span_score" ).text(new_score)
+      $( "#span_score" ).text(new_score);
       if (info.candy){
         var last_crush_color = info.candy.color;
         $( "#span_score_wrapper" ).css({"background-color": last_crush_color});
@@ -557,7 +558,12 @@ $(document).on("click", ".btn", function(evt){
 $(document).on("mousedown", "img", function(evt) {
   // validate that it is the right type of image.
   evt.preventDefault();
-  dragging = evt.target;
+
+  var cellPos = $(evt.target).offset();
+  var dx = evt.pageX - cellPos.left;
+  var dy = evt.pageY - cellPos.top;
+  dragging = { target: evt.target, dx: dx, dy: dy };
+  $(dragging.target).css("z-index", Z_INDEX_DEFAULT*2);
   console.log("beginning drag");
 
   // // prepare to drag the candy
@@ -574,9 +580,9 @@ $(document).on("mousedown", "img", function(evt) {
 $(document).on("mousemove", "img", function(evt) {
   evt.preventDefault();
   if (dragging){
-    $(dragging).offset({
-      top: evt.pageY,
-      left: evt.pageX
+    $(dragging.target).offset({
+      left : evt.pageX - dragging.dx,
+      top  : evt.pageY - dragging.dy
     });
 
     // // move the candy.
@@ -601,6 +607,7 @@ $(document).on("mousemove", "img", function(evt) {
 });
 $(document).on("mouseup", "img", function(evt) {
   evt.preventDefault();
+  $(dragging).css("z-index", Z_INDEX_DEFAULT);
   dragging = null;
   console.log("ending drag");
   // release the candy ("A").
