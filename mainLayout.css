@@ -54,6 +54,10 @@ div.box1 {
   width: 100%;
 }
 
+td > div > div > img {
+  z-index: 30;
+}
+
 #canvas {
   position: absolute;
   width: 320px;

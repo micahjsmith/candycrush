@@ -33,6 +33,7 @@ if (url_var_size >= MIN_BOARD_SIZE && url_var_size <= MAX_BOARD_SIZE) {
 var preparing_new_game;
 var number_removing = 0;
 var number_moving = 0;
+var dragging = null;
 
 // load a rule
 rules = new Rules(board);
@@ -550,4 +551,67 @@ $(document).on("click", ".btn", function(evt){
   if (evt.target.id !== "btn_show_move"){
     clearCanvas();
   }
+});
+
+// Log mouse events on images.
+$(document).on("mousedown", "img", function(evt) {
+  // validate that it is the right type of image.
+  evt.preventDefault();
+  dragging = evt.target;
+  console.log("beginning drag");
+
+  // // prepare to drag the candy
+  // //   - record the original position of the candy? of the mouse?
+  // var cellPos = $(evt.target).offset();
+  // $(evt.target).data("x", cellPos.left);
+  // $(evt.target).data("y", cellPos.top);
+
+  // //   - set the z-index of the element so that it drags on top of everything else
+  // $(evt.target).css({"z-index": 60});
+
+  // // var cell_id = $(evt.target).parent().parent().parent().attr("id");
+});
+$(document).on("mousemove", "img", function(evt) {
+  evt.preventDefault();
+  if (dragging){
+    $(dragging).offset({
+      top: evt.pageY,
+      left: evt.pageX
+    });
+
+    // // move the candy.
+    // // 1. get the x,y position of the mouse on the screen
+    // var x = evt.screenX;
+    // var y = evt.screenY;
+
+    // // 2. get the position of the original cell
+    // var cellX = $(evt.target).data("x");
+    // var cellY = $(evt.target).data("y");
+    // 
+    // var dy = y - cellY;
+    // var dx = x - cellX;
+
+    // // 3. adjust the top and left css properties, accounting for this offset,
+    // //     to match the position of the mouse
+    // $(evt.target).css({
+    //     top: "{0}px".format(dy),
+    //     left: "{0}px".format(dx)
+    // });
+  }
+});
+$(document).on("mouseup", "img", function(evt) {
+  evt.preventDefault();
+  dragging = null;
+  console.log("ending drag");
+  // release the candy ("A").
+  // case 1: the mouse is still within A's original square
+  //   - reset top and left position to original
+  //   - reset z-index
+  // case 2: the mouse is outside of the grid entirely
+  //   - reset top and left position to original
+  //   - reset z-index
+  // case 3: the mouse is within the square of a different candy ("B").
+  //   - immediately begin the animation of moving B to A's square
+  //   - set the top and left position of A to B's square
+  //   - reset z-index
 });
