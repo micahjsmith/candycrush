@@ -542,17 +542,21 @@ $(board).on("scoreUpdate", function(evt, info) {
   }, 10000, 20).then(function() {
     setTimeout(function(){
       var new_score = info.score;
-      $( "#span_score" ).text(new_score);
-      if (info.candy){
-        var last_crush_color = info.candy.color;
-        $( "#span_score_wrapper" ).css({"background-color": last_crush_color});
-        if (last_crush_color === "yellow"){
-          $( "span_score" ).css({"color":"black"});
+      var old_score = $("#span_score").text();
+      // check that new score is greater than old score!!!
+      if (new_score > parseInt(old_score)) {
+        $( "#span_score" ).text(new_score);
+        if (info.candy){
+          var last_crush_color = info.candy.color;
+          $( "#span_score_wrapper" ).css({"background-color": last_crush_color});
+          if (last_crush_color === "yellow"){
+            $( "#span_score_wrapper" ).css({"color":"black"});
+          } else {
+            $( "#span_score_wrapper" ).css({"color":"white"});
+          }
         } else {
-          $( "span_score" ).css({"color":"white"});
+          $( "#span_score_wrapper" ).css({"background-color": "#999999"});
         }
-      } else {
-        $( "#span_score_wrapper" ).css({"background-color": "#999999"});
       }
     }, SCORE_UPDATE_TIMEOUT);
   }).catch(function() {
