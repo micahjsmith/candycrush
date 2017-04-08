@@ -428,6 +428,93 @@ function processMoveClick(direction) {
   }
 }
 
+function processDragBegin(evt){
+  var cellPos = $(evt.target).offset();
+  var dx = evt.pageX - cellPos.left;
+  var dy = evt.pageY - cellPos.top;
+  dragging = { target: evt.target, dx: dx, dy: dy };
+  $(dragging.target).css("z-index", Z_INDEX_DEFAULT*2);
+
+  // reset canvas, just in case :)
+  clearCanvas();
+}
+
+function processDrag(evt){
+  if (dragging){
+    $(dragging.target).offset({
+      left : evt.pageX - dragging.dx,
+      top  : evt.pageY - dragging.dy
+    });
+  }
+}
+
+function processDrop(evt){
+  // determine how to treat the drop of candy "A".
+  var draggedSuccessfully = false;
+  var x = evt.pageX,
+      y = evt.pageY;
+  var cellIdB = positionToCellId(x, y);
+
+  if (cellIdB){
+    // confirm that cell B is adjacent to cell A, and if so, that it is a valid move.
+    var cellIdA = $(dragging.target).parent().parent().parent().attr("id");
+    direction = directionFromCellId(cellIdA, cellIdB);
+    candy = cellIdToCandy(cellIdA);
+    if (direction && rules.isMoveTypeValid(candy, direction)) {
+      // in this case, we drop candy "A" onto candy "B"'s square
+      // set the top and left position of A to B's square
+      // - get color of B
+      // - get color of A
+      // - set color of B to this color
+      // - make A vanish
+      var colorA = getCellColor(cellIdA);
+      var colorB = getCellColor(cellIdB);
+      setCellToColor(cellIdB, colorA);
+      $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT*2);
+      $( cellSelectorString(cellIdB) ).css("z-index", Z_INDEX_DEFAULT);
+      
+      // immediately begin the animation of moving B to A's square
+      var locA = cellIdToIj(cellIdA);
+      var locB = cellIdToIj(cellIdB);
+      var fromRow = locB[0],
+          fromCol = locB[1],
+          toRow   = locA[0],
+          toCol   = locA[1],
+          color   = colorB;
+      animateMove(fromRow, fromCol, toRow, toCol, color);
+      $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT);
+
+      // animations are complete, we can now update the board state
+      toCandy = cellIdToCandy(cellIdB);
+      board.flipCandies(candy, toCandy);
+
+      // Wait for all animations to complete, then begin processing crushes.
+      // Really, the only animation here is candy B moving to candy A's former
+      // location.
+      poll(function(){
+        return number_moving === 0;
+      }, 10000, 20).then(function() {
+        doCrush();
+      }).catch(function() {
+        //console.log("Timed out waiting for flipping candies.");
+      });
+
+      draggedSuccessfully = true;
+    }
+
+  }
+
+  if (!draggedSuccessfully){
+    // reset top and left position to original
+    $(dragging.target).css({
+      top: "0px",
+      left: "0px"
+    });
+  }
+
+  dragging = null;
+}
+
 /**
  * A keyup event has originated from the input text area. Check that a
  * a valid cell is entered with an associated valid move. If so, we enable the
@@ -634,95 +721,18 @@ $(document).on("click", ".btn", function(evt){
   }
 });
 
-// Log mouse events on images.
+// Log mouse events on images for drag/drop functionality
 $(document).on("mousedown", "img", function(evt) {
-  // validate that it is the right type of image.
   evt.preventDefault();
-
-  var cellPos = $(evt.target).offset();
-  var dx = evt.pageX - cellPos.left;
-  var dy = evt.pageY - cellPos.top;
-  dragging = { target: evt.target, dx: dx, dy: dy };
-  $(dragging.target).css("z-index", Z_INDEX_DEFAULT*2);
-
-  // reset canvas, just in case :)
-  clearCanvas();
+  processDragBegin(evt);
 });
 
 $(document).on("mousemove", "img", function(evt) {
   evt.preventDefault();
-  if (dragging){
-    $(dragging.target).offset({
-      left : evt.pageX - dragging.dx,
-      top  : evt.pageY - dragging.dy
-    });
-  }
+  processDrag(evt);
 });
+
 $(document).on("mouseup", "img", function(evt) {
   evt.preventDefault();
-
-  // determine how to treat the drop of candy "A".
-  var draggedSuccessfully = false;
-  var x = evt.pageX,
-      y = evt.pageY;
-  var cellIdB = positionToCellId(x, y);
-  if (cellIdB){
-    var cellIdA = $(dragging.target).parent().parent().parent().attr("id");
-
-    // confirm that cell B is adjacent to cell A, and if so, that it is a valid move.
-    direction = directionFromCellId(cellIdA, cellIdB);
-    candy = cellIdToCandy(cellIdA);
-    if (direction && rules.isMoveTypeValid(candy, direction)) {
-      // in this case, we drop candy "A" onto candy "B"'s square
-      // set the top and left position of A to B's square
-      // - get color of B
-      // - get color of A
-      // - set color of B to this color
-      // - make A vanish
-      var colorA = getCellColor(cellIdA);
-      var colorB = getCellColor(cellIdB);
-      setCellToColor(cellIdB, colorA);
-      $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT*2);
-      $( cellSelectorString(cellIdB) ).css("z-index", Z_INDEX_DEFAULT);
-      
-      // immediately begin the animation of moving B to A's square
-      var locA = cellIdToIj(cellIdA);
-      var locB = cellIdToIj(cellIdB);
-      var fromRow = locB[0],
-          fromCol = locB[1],
-          toRow   = locA[0],
-          toCol   = locA[1],
-          color   = colorB;
-      animateMove(fromRow, fromCol, toRow, toCol, color);
-      $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT);
-
-      // animations are complete, we can now update the board state
-      toCandy = cellIdToCandy(cellIdB);
-      board.flipCandies(candy, toCandy);
-
-      // Wait for all animations to complete, then begin processing crushes.
-      // Really, the only animation here is candy B moving to candy A's former
-      // location.
-      poll(function(){
-        return number_moving === 0;
-      }, 10000, 20).then(function() {
-        doCrush();
-      }).catch(function() {
-        //console.log("Timed out waiting for flipping candies.");
-      });
-
-      draggedSuccessfully = true;
-    }
-
-  }
-
-  if (!draggedSuccessfully){
-    // reset top and left position to original
-    $(dragging.target).css({
-      top: "0px",
-      left: "0px"
-    });
-  }
-
-  dragging = null;
+  processDrop(evt);
 });
