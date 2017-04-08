@@ -172,33 +172,6 @@ function getCellColor(cellId) {
 }
 
 // ----------------------------------------------------------------------------
-// Enable/disable input controls
-
-function disableButton(id) {
-  $( "#" + id ).removeClass("btn_enabled").addClass("btn_disabled");
-}
-
-function enableButton(id) {
-  $( "#" + id ).removeClass("btn_disabled").addClass("btn_enabled");
-}
-
-function disableMoveButton(direction) {
-  disableButton("btn_move_" + direction);
-}
-
-function enableMoveButton(direction) {
-  enableButton("btn_move_" + direction);
-}
-
-function disableMoveInput() {
-  $( "#move_input_text" ).prop("disabled", true);
-}
-
-function enableMoveInput() {
-  $( "#move_input_text" ).prop("disabled", false);
-}
-
-// ----------------------------------------------------------------------------
 // Animation
 
 /**
@@ -249,24 +222,6 @@ function clearCanvas() {
   var canvas = document.getElementById("canvas");
   ctx.clearRect(0,0,canvas.width, canvas.height);
   ctx.restore();
-}
-
-/**
- * Disable/enable buttons during/for the process/completion of computing and drawing the crushes
- * on the board.
- */
-function setCrushing(bool) {
-  if (bool) {
-    // Disable arrows
-    DIRECTIONS.forEach(function(entry){
-      disableMoveButton(entry);
-    });
-    $( "#" + "move_input_text" ).val("");
-    disableMoveInput();
-  } else {
-    enableMoveInput();
-    $( "#" + "move_input_text" ).focus();
-  }
 }
 
 /**
@@ -338,8 +293,6 @@ function doCrush() {
       }, 10000, 20).then(function(){
         if (canCrush()){
           doCrush();
-        } else {
-          setCrushing(false);
         }
       }).catch(function() {
         //console.log("Timed out waiting for moving candies.");
@@ -363,8 +316,6 @@ function doCrush() {
  */
 function processNoValidMovesRemain() {
   window.alert("No valid moves remain. Try a new game!");
-  $(".btn").removeClass("btn_enabled").addClass("btn_disabled");
-  $("#btn_new_game").removeClass("btn_disabled").addClass("btn_enabled");
 }
 
 /**
@@ -382,49 +333,6 @@ function processShowMove(evt) {
     var y = move.candy.row * w + w/2;
     var d = move.direction;
     drawArrow(x,y,w,d);
-  }
-}
-
-/**
- * Get cell that was clicked and populated move input text box.
- */
-function gameTableClickHandler(evt){
-  var id = evt.currentTarget.id;
-  $( "#move_input_text" ).val(id);
-
-  // Handle a fake keyup event to the move input text box to avoid redoing the
-  // logic.
-  processInputKeyup();
-}
-
-/** 
- * We get a click event on our movement arrow buttons. 
- * - do some validation on desired move
- * - check that the desired move is allowed by the rules
- * - flip the candies in question
- * - poll until candies are flipped, then do crush
- */
-function processMoveClick(direction) {
-  if ( ! $( "#" + "btn_move_" + direction).hasClass("btn_disabled")) {
-    var input_text = $( "#move_input_text" ).val();
-    if (isValidCell(input_text)){
-      var candy = cellIdToCandy(input_text);
-      if (rules.isMoveTypeValid(candy, direction)){
-        var toCandy = board.getCandyInDirection(candy, direction);
-
-        setCrushing(true);
-        board.flipCandies(candy, toCandy);
-
-        setTimeout(function(){},10);
-        poll(function(){
-          return number_moving === 0;
-        }, 10000, 20).then(function() {
-          doCrush();
-        }).catch(function() {
-          //console.log("Timed out waiting for flipping candies.");
-        });
-      }
-    }
   }
 }
 
@@ -516,26 +424,6 @@ function processDrop(evt){
 }
 
 /**
- * A keyup event has originated from the input text area. Check that a
- * a valid cell is entered with an associated valid move. If so, we enable the
- * appropriate buttons.
- */
-function processInputKeyup() {
-  var input_text = $( "#move_input_text" ).val();
-  if (isValidCell(input_text)){
-    var candy = cellIdToCandy(input_text);
-    DIRECTIONS.forEach(function(entry){
-      if (rules.isMoveTypeValid(candy, entry)){
-        enableMoveButton(entry);
-        return;
-      } else {
-        disableMoveButton(entry);
-      }
-    });
-  }
-}
-
-/**
  * Fill in the game table with appropriate td and tr elements.
  * We also add mouse press listeners to these elements.
  */
@@ -551,9 +439,6 @@ function createGameTable() {
     newRow = newRow + "</tr>";
     $( "#game_table > tbody" ).append(newRow);
   }
-
-  // Add click handlers.
-  $( "#game_table > tbody > tr > td" ).click(gameTableClickHandler);
 
   // Init canvas context.
   var canvas = document.getElementById("canvas");
@@ -694,26 +579,6 @@ $(document).on("click", "#btn_show_move", function(evt){
 $(document).on("click", "#btn_move_up", function(evt) {
   processMoveClick("up");
 });
-$(document).on("click", "#btn_move_left", function(evt) {
-  processMoveClick("left");
-});
-$(document).on("click", "#btn_move_right", function(evt) {
-  processMoveClick("right");
-});
-$(document).on("click", "#btn_move_down", function(evt) {
-  processMoveClick("down");
-});
-$(document).on("keyup", function(evt) {
-  if ($.inArray(evt.which, ARROW_KEY_CODES) != -1) {
-    clearCanvas();
-    processMoveClick(arrowToDirection(evt.which));
-  } else if (evt.target.id == "move_input_text"){
-    // Is this coming directly from the move_input_text?
-    // Delegate to move-specific handler, to check contents of text area.
-    processInputKeyup();
-  }
-});
-
 // Clear canvas once any button *but* "Show Move" is pressed.
 $(document).on("click", ".btn", function(evt){
   if (evt.target.id !== "btn_show_move"){
@@ -721,17 +586,18 @@ $(document).on("click", ".btn", function(evt){
   }
 });
 
+// ----------------------------------------------------------------------------
+// Mouse Events
+
 // Log mouse events on images for drag/drop functionality
 $(document).on("mousedown", "img", function(evt) {
   evt.preventDefault();
   processDragBegin(evt);
 });
-
 $(document).on("mousemove", "img", function(evt) {
   evt.preventDefault();
   processDrag(evt);
 });
-
 $(document).on("mouseup", "img", function(evt) {
   evt.preventDefault();
   processDrop(evt);
