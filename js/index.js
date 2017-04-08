@@ -123,6 +123,27 @@ function arrowToDirection(keyCode) {
   return DIRECTIONS[keyCode - ARROW_KEY_CODES[0]];
 }
 
+function directionFromCellId(from, to){
+  locFrom = cellIdToIj(from);
+  locTo = cellIdToIj(to);
+  if (locFrom[0] == locTo[0]){
+    if (locFrom[1]+1 == locTo[1]) {
+      return "right";
+    } else if (locFrom[1]-1 == locTo[1]) {
+      return "left";
+    }
+  } else if (locFrom[1] == locTo[1]) {
+    if (locFrom[0]+1 == locTo[0]) {
+      return "down";
+    } else if (locFrom[0]-1 == locTo[0]){
+      return "up";
+    }
+  }
+
+  return null;
+
+}
+
 function setCellToColor(cellId, color) {
   if (color === "empty"){
     //pass
@@ -502,14 +523,16 @@ $(board).on("add", function(evt, info) {
 
 // move a candy on the board
 $(board).on("move", function(evt, info) {
-  // Change the colors of the cell
-  var fromRow = info.fromRow;
-  var fromCol = info.fromCol;
-  var row     = info.toRow;
-  var col     = info.toCol;
-  var color   = info.candy.color;
+  if (!dragging){
+    // Change the colors of the cell
+    var fromRow = info.fromRow;
+    var fromCol = info.fromCol;
+    var row     = info.toRow;
+    var col     = info.toCol;
+    var color   = info.candy.color;
 
-  animateMove(fromRow, fromCol, row, col, color);
+    animateMove(fromRow, fromCol, row, col, color);
+  }
 });
 
 // remove a candy from the board
@@ -621,6 +644,9 @@ $(document).on("mousedown", "img", function(evt) {
   var dy = evt.pageY - cellPos.top;
   dragging = { target: evt.target, dx: dx, dy: dy };
   $(dragging.target).css("z-index", Z_INDEX_DEFAULT*2);
+
+  // reset canvas, just in case :)
+  clearCanvas();
 });
 
 $(document).on("mousemove", "img", function(evt) {
@@ -636,40 +662,61 @@ $(document).on("mouseup", "img", function(evt) {
   evt.preventDefault();
 
   // determine how to treat the drop of candy "A".
+  var draggedSuccessfully = false;
   var x = evt.pageX,
       y = evt.pageY;
   var cellIdB = positionToCellId(x, y);
   if (cellIdB){
-    // in this case, we drop candy "A" onto candy "B"'s square
-    // set the top and left position of A to B's square
-    // - get color of B
-    // - get color of A
-    // - set color of B to this color
-    // - make A vanish
     var cellIdA = $(dragging.target).parent().parent().parent().attr("id");
-    var colorA = getCellColor(cellIdA);
-    var colorB = getCellColor(cellIdB);
-    setCellToColor(cellIdB, colorA);
-    $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT*2);
-    $( cellSelectorString(cellIdB) ).css("z-index", Z_INDEX_DEFAULT);
-    
-    // immediately begin the animation of moving B to A's square
-    var locA = cellIdToIj(cellIdA);
-    var locB = cellIdToIj(cellIdB);
-    var fromRow = locB[0],
-        fromCol = locB[1],
-        toRow   = locA[0],
-        toCol   = locA[1],
-        color   = colorB;
-    animateMove(fromRow, fromCol, toRow, toCol, color);
-    $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT);
 
-    // reset canvas, just in case :)
-    clearCanvas();
+    // confirm that cell B is adjacent to cell A, and if so, that it is a valid move.
+    direction = directionFromCellId(cellIdA, cellIdB);
+    candy = cellIdToCandy(cellIdA);
+    if (direction && rules.isMoveTypeValid(candy, direction)) {
+      // in this case, we drop candy "A" onto candy "B"'s square
+      // set the top and left position of A to B's square
+      // - get color of B
+      // - get color of A
+      // - set color of B to this color
+      // - make A vanish
+      var colorA = getCellColor(cellIdA);
+      var colorB = getCellColor(cellIdB);
+      setCellToColor(cellIdB, colorA);
+      $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT*2);
+      $( cellSelectorString(cellIdB) ).css("z-index", Z_INDEX_DEFAULT);
+      
+      // immediately begin the animation of moving B to A's square
+      var locA = cellIdToIj(cellIdA);
+      var locB = cellIdToIj(cellIdB);
+      var fromRow = locB[0],
+          fromCol = locB[1],
+          toRow   = locA[0],
+          toCol   = locA[1],
+          color   = colorB;
+      animateMove(fromRow, fromCol, toRow, toCol, color);
+      $( cellSelectorString(cellIdA) ).css("z-index", Z_INDEX_DEFAULT);
 
-    // try to crush :)
+      // animations are complete, we can now update the board state
+      toCandy = cellIdToCandy(cellIdB);
+      board.flipCandies(candy, toCandy);
 
-  } else {
+      // Wait for all animations to complete, then begin processing crushes.
+      // Really, the only animation here is candy B moving to candy A's former
+      // location.
+      poll(function(){
+        return number_moving === 0;
+      }, 10000, 20).then(function() {
+        doCrush();
+      }).catch(function() {
+        //console.log("Timed out waiting for flipping candies.");
+      });
+
+      draggedSuccessfully = true;
+    }
+
+  }
+
+  if (!draggedSuccessfully){
     // reset top and left position to original
     $(dragging.target).css({
       top: "0px",
